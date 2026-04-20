@@ -39,15 +39,6 @@ function shortcutsOverlayVisible(): boolean {
   return overlay ? !overlay.classList.contains("hidden") : false;
 }
 
-function toggleShortcutsOverlay(force?: boolean): void {
-  const overlay = document.getElementById("shortcuts-overlay");
-  if (!overlay) {
-    return;
-  }
-  const shouldShow = typeof force === "boolean" ? force : overlay.classList.contains("hidden");
-  overlay.classList.toggle("hidden", !shouldShow);
-}
-
 export function setupShortcuts({
   state,
   canEdit,

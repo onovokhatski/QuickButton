@@ -281,7 +281,6 @@ function ensureEditorController() {
     validateCommand,
     resolveCommandForSend,
     dispatch,
-    render,
     renderEditorSelection: applyEditorFromSelection,
     showToast,
     runtimeTestSend: (payload) => window.quickButtonApi.runtime.testSend(payload)

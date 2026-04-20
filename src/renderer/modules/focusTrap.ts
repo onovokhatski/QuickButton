@@ -22,7 +22,6 @@ export function activateFocusTrap(container: HTMLElement): FocusTrapController {
     document.activeElement instanceof HTMLElement ? document.activeElement : null;
   const focusables = getFocusableElements(container);
   const first = focusables[0];
-  const last = focusables[focusables.length - 1];
   if (first) {
     first.focus();
   } else {

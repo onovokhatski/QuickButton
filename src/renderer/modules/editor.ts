@@ -22,7 +22,6 @@ type EditorDeps = {
   validateCommand: (command: any) => string | null;
   resolveCommandForSend: (command: any) => any;
   dispatch: (command: AppCommand, options?: AppDispatchOptions) => void;
-  render: () => void;
   renderEditorSelection: () => void;
   showToast: (message: string, type?: string) => void;
   runtimeTestSend: (payload: any) => Promise<{ ok: boolean; message?: string }>;
@@ -42,7 +41,6 @@ export function createEditorController({
   validateCommand,
   resolveCommandForSend,
   dispatch,
-  render,
   renderEditorSelection,
   showToast,
   runtimeTestSend
