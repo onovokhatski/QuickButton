@@ -1,0 +1,32 @@
+{
+  "ui": {
+    "alwaysOnTop": true,
+    "mode": "edit",
+    "buttonSize": { "w": 64, "h": 64 },
+    "grid": { "cols": 3, "rows": 2 },
+    "service": { "col": 0, "row": 0 }
+  },
+  "settings": {
+    "onCommandError": "stop"
+  },
+  "buttons": [
+    {
+      "id": "btn-legacy-1",
+      "label": "Ping",
+      "style": {
+        "bgColor": "#202020",
+        "textColor": "#ffffff",
+        "fontSize": 13,
+        "radius": 8
+      },
+      "position": { "col": 0, "row": 0 },
+      "commands": [
+        {
+          "protocol": "udp",
+          "target": { "host": "127.0.0.1", "port": 7000 },
+          "payload": { "type": "string", "value": "ping" }
+        }
+      ]
+    }
+  ]
+}

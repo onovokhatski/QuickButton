@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "meta": {
+    "createdAt": "2024-10-01T00:00:00.000Z",
+    "updatedAt": "2024-10-01T00:00:00.000Z"
+  },
+  "ui": {
+    "alwaysOnTop": true,
+    "mode": "edit",
+    "buttonSize": { "w": 72, "h": 72 },
+    "grid": { "cols": 4, "rows": 3 },
+    "service": { "col": 0, "row": 0, "radius": 8 }
+  },
+  "settings": {
+    "onCommandError": "stop",
+    "toastEnabled": true
+  },
+  "buttons": [
+    {
+      "id": "btn-v1-osc",
+      "label": "Fire OSC",
+      "style": {
+        "bgColor": "#8b0000",
+        "textColor": "#ffffff",
+        "fontSize": 14,
+        "radius": 10
+      },
+      "position": { "col": 1, "row": 0 },
+      "commands": [
+        {
+          "protocol": "osc-udp",
+          "target": { "host": "192.168.1.50", "port": 9000 },
+          "osc": {
+            "address": "/fire",
+            "args": [
+              { "type": "int", "value": 1 },
+              { "type": "float", "value": 0.75 },
+              { "type": "string", "value": "go" }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

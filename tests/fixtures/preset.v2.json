@@ -1,0 +1,50 @@
+{
+  "version": 2,
+  "meta": {
+    "createdAt": "2025-02-14T00:00:00.000Z",
+    "updatedAt": "2025-02-14T00:00:00.000Z"
+  },
+  "ui": {
+    "alwaysOnTop": true,
+    "mode": "edit",
+    "buttonSize": { "w": 72, "h": 72 },
+    "grid": { "cols": 4, "rows": 3 },
+    "gridBackground": { "color": "#000000", "opacity": 0.25 },
+    "service": { "col": 0, "row": 0, "radius": 8, "showInGrid": true },
+    "clickThroughBackground": true,
+    "window": { "x": 100, "y": 120 }
+  },
+  "settings": {
+    "onCommandError": "stop",
+    "toastEnabled": true
+  },
+  "contacts": [
+    {
+      "id": "contact-v2-1",
+      "name": "Reaper",
+      "protocol": "osc-udp",
+      "target": { "host": "127.0.0.1", "port": 8000 }
+    }
+  ],
+  "buttons": [
+    {
+      "id": "btn-v2-wrap",
+      "label": "Cue Go",
+      "style": {
+        "bgColor": "#264653",
+        "textColor": "#ffffff",
+        "fontSize": 13,
+        "radius": 8,
+        "wrapLabel": true
+      },
+      "position": { "col": 2, "row": 1 },
+      "commands": [
+        {
+          "protocol": "udp",
+          "contactId": "contact-v2-1",
+          "payload": { "type": "string", "value": "go" }
+        }
+      ]
+    }
+  ]
+}

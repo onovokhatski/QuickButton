@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QuickButton</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="shell no-drag">
+      <div class="top">
+        <div id="top-service-slot"></div>
+        <div id="app-version" class="version-pill" aria-label="Application version"></div>
+      </div>
+
+      <div class="layout">
+        <div>
+          <div id="grid" class="grid"></div>
+          <div id="grid-actions" class="row" style="margin-top: 8px">
+            <button id="add-button">Add button</button>
+            <button id="run-selected">Run selected chain</button>
+          </div>
+        </div>
+
+        <div id="editor" class="editor">
+          <div class="editor-tabs" role="tablist" aria-label="Editor tabs">
+            <button
+              id="tab-grid-settings"
+              class="editor-tab active"
+              role="tab"
+              aria-selected="true"
+              aria-controls="panel-grid-settings"
+              tabindex="0"
+            >
+              Grid
+            </button>
+            <button
+              id="tab-connections-settings"
+              class="editor-tab"
+              role="tab"
+              aria-selected="false"
+              aria-controls="panel-connections-settings"
+              tabindex="-1"
+            >
+              Connections
+            </button>
+            <button
+              id="tab-button-settings"
+              class="editor-tab"
+              role="tab"
+              aria-selected="false"
+              aria-controls="panel-button-settings"
+              tabindex="-1"
+            >
+              Button
+            </button>
+          </div>
+
+          <div
+            id="panel-button-settings"
+            class="form-grid hidden"
+            role="tabpanel"
+            aria-labelledby="tab-button-settings"
+          >
+            <h3>Button editor</h3>
+            <div id="no-selection" class="muted">Select a button in grid</div>
+            <div id="editor-fields" class="form-grid hidden">
+              <div id="btn-preview-wrap" class="btn-preview-wrap">
+                <div class="section-title">Preview</div>
+                <div id="btn-preview-stage" class="btn-preview-stage">
+                  <button id="btn-preview" class="user-btn" type="button" tabindex="-1">
+                    Label
+                  </button>
+                </div>
+              </div>
+
+              <div class="section">
+                <div class="section-title">Label</div>
+                <div class="button-name-row">
+                  <input id="btn-label" placeholder="Button name" />
+                  <button
+                    id="delete-button"
+                    class="icon-action"
+                    title="Delete button"
+                    aria-label="Delete button"
+                  >
+                    <svg viewBox="0 0 16 16" aria-hidden="true">
+                      <path d="M3.5 5h9"></path>
+                      <path d="M6 5V12.5"></path>
+                      <path d="M10 5V12.5"></path>
+                      <path d="M5.5 5V3.5h5V5"></path>
+                      <path d="M4.5 5V13a1 1 0 0 0 1 1h5a1 1 0 0 0 1-1V5"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div class="section">
+                <div class="section-title">Colors</div>
+                <div class="field-grid">
+                  <label class="field">
+                    <span class="field-label">Background</span>
+                    <input id="btn-bg" type="color" value="#252525" />
+                  </label>
+                  <label class="field">
+                    <span class="field-label">Text</span>
+                    <input id="btn-fg" type="color" value="#ffffff" />
+                  </label>
+                </div>
+              </div>
+
+              <div class="section">
+                <div class="section-title">Text</div>
+                <div class="field-grid">
+                  <label class="field">
+                    <span class="field-label">Size</span>
+                    <input id="btn-font" type="number" min="8" max="42" value="13" />
+                  </label>
+                  <label class="field">
+                    <span class="field-label">Wrap</span>
+                    <button
+                      id="btn-wrap"
+                      class="icon-action icon-toggle"
+                      type="button"
+                      title="Wrap label text"
+                      aria-label="Wrap label text"
+                      aria-pressed="false"
+                    >
+                      <svg viewBox="0 0 16 16" aria-hidden="true">
+                        <path d="M2 4h12"></path>
+                        <path d="M2 8h9a2.5 2.5 0 0 1 0 5H8"></path>
+                        <path d="M10 11l-2 2 2 2"></path>
+                        <path d="M2 13h4"></path>
+                      </svg>
+                    </button>
+                  </label>
+                </div>
+              </div>
+
+              <div class="section">
+                <div class="section-title">Shape</div>
+                <div class="field-grid">
+                  <label class="field">
+                    <span class="field-label">Radius</span>
+                    <input id="btn-radius" type="number" min="0" max="24" value="8" />
+                  </label>
+                </div>
+              </div>
+
+              <div class="section">
+                <div class="section-title">Background image</div>
+                <div class="field-row">
+                  <button
+                    id="btn-icon-pick"
+                    type="button"
+                    class="icon-action"
+                    title="Choose image"
+                    aria-label="Choose image"
+                  >
+                    <svg viewBox="0 0 16 16" aria-hidden="true">
+                      <path
+                        d="M2 12.5V4.5a1 1 0 0 1 1-1h3.5l1.5 1.5H13a1 1 0 0 1 1 1v6.5a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1Z"
+                      ></path>
+                    </svg>
+                  </button>
+                  <button
+                    id="btn-icon-clear"
+                    type="button"
+                    class="icon-action"
+                    title="Remove image"
+                    aria-label="Remove image"
+                  >
+                    <svg viewBox="0 0 16 16" aria-hidden="true">
+                      <path d="M3.5 5h9"></path>
+                      <path d="M6 5V12.5"></path>
+                      <path d="M10 5V12.5"></path>
+                      <path d="M5.5 5V3.5h5V5"></path>
+                      <path d="M4.5 5V13a1 1 0 0 0 1 1h5a1 1 0 0 0 1-1V5"></path>
+                    </svg>
+                  </button>
+                  <span class="muted field-hint">Fills the whole button as cover.</span>
+                </div>
+                <label class="field" title="Dim the background image so the label stays readable">
+                  <span class="field-label">Darken</span>
+                  <input id="btn-icon-darken" type="range" min="0" max="100" value="35" />
+                </label>
+                <label
+                  class="field"
+                  title="When to show the button label: always, only on hover/focus, or never"
+                >
+                  <span class="field-label">Label</span>
+                  <select id="btn-label-visibility">
+                    <option value="always">always</option>
+                    <option value="hover">hover</option>
+                    <option value="never">never</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="section">
+                <div class="section-title">Commands</div>
+                <button id="add-command">Add command</button>
+                <div id="commands"></div>
+              </div>
+            </div>
+            <div id="service-editor" class="form-grid hidden">
+              <div class="muted">Service cell settings</div>
+              <div class="row">
+                <label class="muted">Radius</label>
+                <input id="service-radius" type="number" min="0" max="24" value="8" />
+              </div>
+              <div class="muted">Drag service cell to move it in the grid</div>
+            </div>
+          </div>
+
+          <div
+            id="panel-grid-settings"
+            class="form-grid"
+            role="tabpanel"
+            aria-labelledby="tab-grid-settings"
+          >
+            <h3>Grid settings</h3>
+            <div class="row">
+              <label class="muted">Grid</label>
+              <input id="grid-cols" type="number" min="1" max="20" value="4" />
+              <input id="grid-rows" type="number" min="1" max="20" value="3" />
+            </div>
+            <div class="row">
+              <label class="muted">Button size</label>
+              <input id="btn-size-w" type="number" min="16" max="160" value="72" />
+              <input id="btn-size-h" type="number" min="16" max="160" value="72" />
+            </div>
+            <div class="row">
+              <label class="muted">On error</label>
+              <select id="on-error">
+                <option value="stop">stop</option>
+                <option value="continue">continue</option>
+              </select>
+            </div>
+            <div class="row">
+              <label class="muted">Always on top</label>
+              <input id="always-on-top" type="checkbox" checked />
+            </div>
+            <div class="row">
+              <label class="muted">Click-through background</label>
+              <input id="click-through-background" type="checkbox" checked />
+            </div>
+            <div class="row">
+              <label class="muted">Show service in grid</label>
+              <input id="show-service-in-grid" type="checkbox" checked />
+            </div>
+            <div class="row">
+              <label class="muted">Grid background</label>
+              <input id="grid-bg-color" type="color" value="#000000" />
+              <input id="grid-bg-opacity" type="range" min="0" max="100" value="25" />
+              <span id="grid-bg-opacity-value" class="muted">25%</span>
+            </div>
+          </div>
+
+          <div
+            id="panel-connections-settings"
+            class="form-grid hidden"
+            role="tabpanel"
+            aria-labelledby="tab-connections-settings"
+          >
+            <h3>Connections</h3>
+            <div class="row">
+              <input id="contact-name" placeholder="Name" />
+              <select id="contact-protocol">
+                <option value="udp">udp</option>
+                <option value="tcp">tcp</option>
+                <option value="osc-udp">osc-udp</option>
+              </select>
+            </div>
+            <div class="row">
+              <input id="contact-host" placeholder="Host/IP" value="127.0.0.1" />
+              <input id="contact-port" type="number" min="1" max="65535" value="7000" />
+            </div>
+            <div class="row">
+              <button id="contact-new">New</button>
+              <button id="contact-save">Save</button>
+            </div>
+            <div id="contacts-list" class="form-grid"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="status">Ready</div>
+      <div id="preset-path"></div>
+    </div>
+
+    <div id="toast-root"></div>
+
+    <div
+      id="shortcuts-overlay"
+      class="onboarding-overlay hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="shortcuts-title"
+    >
+      <div class="onboarding-card shortcuts-card">
+        <h2 id="shortcuts-title">Keyboard shortcuts</h2>
+        <table class="shortcuts-table">
+          <tbody>
+            <tr>
+              <td><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>O</kbd></td>
+              <td>Open preset</td>
+            </tr>
+            <tr>
+              <td><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>S</kbd></td>
+              <td>Save preset</td>
+            </tr>
+            <tr>
+              <td><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd></td>
+              <td>Save as…</td>
+            </tr>
+            <tr>
+              <td><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>E</kbd></td>
+              <td>Toggle Edit / Use mode</td>
+            </tr>
+            <tr>
+              <td><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>Z</kbd></td>
+              <td>Undo last layout/edit change</td>
+            </tr>
+            <tr>
+              <td><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd></td>
+              <td>Redo last undone change</td>
+            </tr>
+            <tr>
+              <td><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>1</kbd></td>
+              <td>Edit mode</td>
+            </tr>
+            <tr>
+              <td><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>2</kbd></td>
+              <td>Use mode</td>
+            </tr>
+            <tr>
+              <td><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>G</kbd></td>
+              <td>Toggle service cell in grid</td>
+            </tr>
+            <tr>
+              <td><kbd>1</kbd>…<kbd>9</kbd></td>
+              <td>Run buttons 1–9 (Use mode)</td>
+            </tr>
+            <tr>
+              <td><kbd>Esc</kbd></td>
+              <td>Use → Edit mode / close this dialog</td>
+            </tr>
+            <tr>
+              <td><kbd>?</kbd> or <kbd>F1</kbd></td>
+              <td>Show this cheatsheet</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="onboarding-actions">
+          <button id="shortcuts-dismiss" type="button" class="btn-primary">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="onboarding-overlay"
+      class="onboarding-overlay hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="onboarding-title"
+    >
+      <div class="onboarding-card">
+        <h2 id="onboarding-title">Welcome to QuickButton</h2>
+        <p class="muted">First-run checklist:</p>
+        <ul id="onboarding-checklist" class="onboarding-checklist">
+          <li data-step="contact"><span data-check aria-hidden="true">○</span> Create a connection</li>
+          <li data-step="button"><span data-check aria-hidden="true">○</span> Add your first button</li>
+          <li data-step="test-send"><span data-check aria-hidden="true">○</span> Run a test send</li>
+        </ul>
+        <div id="onboarding-progress" class="muted">0/3 completed</div>
+        <ul>
+          <li><b>Drag</b> the move handle in the service corner to reposition the window.</li>
+          <li>
+            <b>Cmd/Ctrl + E</b> toggles Edit/Use mode. <b>1-9</b> fire the first nine buttons in Use
+            mode.
+          </li>
+          <li>Press <b>?</b> or <b>F1</b> any time to see all keyboard shortcuts.</li>
+          <li>Click-through mode lets the area under your buttons stay clickable.</li>
+          <li>Help &rarr; Open logs folder to inspect diagnostic logs.</li>
+        </ul>
+        <div class="onboarding-actions">
+          <button id="onboarding-dismiss" type="button" class="btn-primary">Got it</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

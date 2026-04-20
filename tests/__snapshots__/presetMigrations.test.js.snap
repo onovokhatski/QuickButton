@@ -1,0 +1,338 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`preset migrations — fixtures > v0 fixture: sanitize produces stable snapshot 1`] = `
+{
+  "buttons": [
+    {
+      "commands": [
+        {
+          "isCollapsed": false,
+          "name": "",
+          "payload": {
+            "type": "string",
+            "value": "ping",
+          },
+          "protocol": "udp",
+          "target": {
+            "host": "127.0.0.1",
+            "keepAliveMs": 10000,
+            "persistent": false,
+            "port": 7000,
+          },
+        },
+      ],
+      "id": "btn-legacy-1",
+      "label": "Ping",
+      "position": {
+        "col": 0,
+        "row": 0,
+      },
+      "style": {
+        "bgColor": "#202020",
+        "fontSize": 13,
+        "iconDarken": 35,
+        "labelVisibility": "always",
+        "radius": 8,
+        "textColor": "#ffffff",
+      },
+    },
+  ],
+  "contacts": [],
+  "meta": {
+    "createdAt": "2025-04-19T12:00:00.000Z",
+    "updatedAt": "2025-04-19T12:00:00.000Z",
+  },
+  "settings": {
+    "onCommandError": "stop",
+    "toastEnabled": true,
+  },
+  "ui": {
+    "alwaysOnTop": true,
+    "buttonSize": {
+      "h": 64,
+      "w": 64,
+    },
+    "clickThroughBackground": true,
+    "grid": {
+      "cols": 3,
+      "rows": 2,
+    },
+    "gridBackground": {
+      "color": "#000000",
+      "opacity": 0.25,
+    },
+    "mode": "edit",
+    "service": {
+      "col": 0,
+      "radius": 8,
+      "row": 0,
+      "showInGrid": true,
+    },
+    "window": {
+      "x": 80,
+      "y": 80,
+    },
+  },
+  "version": 5,
+}
+`;
+
+exports[`preset migrations — fixtures > v1 fixture: sanitize produces stable snapshot 1`] = `
+{
+  "buttons": [
+    {
+      "commands": [
+        {
+          "isCollapsed": false,
+          "name": "",
+          "osc": {
+            "address": "/fire",
+            "args": [
+              {
+                "type": "int",
+                "value": 1,
+              },
+              {
+                "type": "float",
+                "value": 0.75,
+              },
+              {
+                "type": "string",
+                "value": "go",
+              },
+            ],
+          },
+          "protocol": "osc-udp",
+          "target": {
+            "host": "192.168.1.50",
+            "keepAliveMs": 10000,
+            "persistent": false,
+            "port": 9000,
+          },
+        },
+      ],
+      "id": "btn-v1-osc",
+      "label": "Fire OSC",
+      "position": {
+        "col": 1,
+        "row": 0,
+      },
+      "style": {
+        "bgColor": "#8b0000",
+        "fontSize": 14,
+        "iconDarken": 35,
+        "labelVisibility": "always",
+        "radius": 10,
+        "textColor": "#ffffff",
+      },
+    },
+  ],
+  "contacts": [],
+  "meta": {
+    "createdAt": "2024-10-01T00:00:00.000Z",
+    "updatedAt": "2025-04-19T12:00:00.000Z",
+  },
+  "settings": {
+    "onCommandError": "stop",
+    "toastEnabled": true,
+  },
+  "ui": {
+    "alwaysOnTop": true,
+    "buttonSize": {
+      "h": 72,
+      "w": 72,
+    },
+    "clickThroughBackground": true,
+    "grid": {
+      "cols": 4,
+      "rows": 3,
+    },
+    "gridBackground": {
+      "color": "#000000",
+      "opacity": 0.25,
+    },
+    "mode": "edit",
+    "service": {
+      "col": 0,
+      "radius": 8,
+      "row": 0,
+      "showInGrid": true,
+    },
+    "window": {
+      "x": 80,
+      "y": 80,
+    },
+  },
+  "version": 5,
+}
+`;
+
+exports[`preset migrations — fixtures > v2 fixture: sanitize produces stable snapshot 1`] = `
+{
+  "buttons": [
+    {
+      "commands": [
+        {
+          "contactId": "contact-v2-1",
+          "isCollapsed": false,
+          "name": "",
+          "payload": {
+            "type": "string",
+            "value": "go",
+          },
+          "protocol": "udp",
+        },
+      ],
+      "id": "btn-v2-wrap",
+      "label": "Cue Go",
+      "position": {
+        "col": 2,
+        "row": 1,
+      },
+      "style": {
+        "bgColor": "#264653",
+        "fontSize": 13,
+        "iconDarken": 35,
+        "labelVisibility": "always",
+        "radius": 8,
+        "textColor": "#ffffff",
+        "wrapLabel": true,
+      },
+    },
+  ],
+  "contacts": [
+    {
+      "id": "contact-v2-1",
+      "name": "Reaper",
+      "protocol": "osc-udp",
+      "target": {
+        "host": "127.0.0.1",
+        "keepAliveMs": 10000,
+        "persistent": false,
+        "port": 8000,
+      },
+    },
+  ],
+  "meta": {
+    "createdAt": "2025-02-14T00:00:00.000Z",
+    "updatedAt": "2025-04-19T12:00:00.000Z",
+  },
+  "settings": {
+    "onCommandError": "stop",
+    "toastEnabled": true,
+  },
+  "ui": {
+    "alwaysOnTop": true,
+    "buttonSize": {
+      "h": 72,
+      "w": 72,
+    },
+    "clickThroughBackground": true,
+    "grid": {
+      "cols": 4,
+      "rows": 3,
+    },
+    "gridBackground": {
+      "color": "#000000",
+      "opacity": 0.25,
+    },
+    "mode": "edit",
+    "service": {
+      "col": 0,
+      "radius": 8,
+      "row": 0,
+      "showInGrid": true,
+    },
+    "window": {
+      "x": 100,
+      "y": 120,
+    },
+  },
+  "version": 5,
+}
+`;
+
+exports[`preset migrations — fixtures > v3 fixture: sanitize produces stable snapshot 1`] = `
+{
+  "buttons": [
+    {
+      "commands": [
+        {
+          "contactId": "contact-v3-tcp",
+          "isCollapsed": false,
+          "name": "",
+          "payload": {
+            "type": "hex",
+            "value": "0x01 0x02 0xff",
+          },
+          "protocol": "tcp",
+        },
+      ],
+      "id": "btn-v3-icon",
+      "label": "Camera 1",
+      "position": {
+        "col": 0,
+        "row": 0,
+      },
+      "style": {
+        "bgColor": "#1a1a1a",
+        "fontSize": 13,
+        "iconDarken": 45,
+        "iconPath": "/var/folders/fake/cam1.png",
+        "labelVisibility": "hover",
+        "radius": 8,
+        "textColor": "#ffffff",
+      },
+    },
+  ],
+  "contacts": [
+    {
+      "id": "contact-v3-tcp",
+      "name": "StreamDeck",
+      "protocol": "tcp",
+      "target": {
+        "host": "10.0.0.4",
+        "keepAliveMs": 10000,
+        "persistent": false,
+        "port": 16622,
+      },
+    },
+  ],
+  "meta": {
+    "createdAt": "2025-04-01T00:00:00.000Z",
+    "updatedAt": "2025-04-19T12:00:00.000Z",
+  },
+  "settings": {
+    "onCommandError": "continue",
+    "toastEnabled": true,
+  },
+  "ui": {
+    "alwaysOnTop": true,
+    "buttonSize": {
+      "h": 72,
+      "w": 72,
+    },
+    "clickThroughBackground": true,
+    "grid": {
+      "cols": 4,
+      "rows": 3,
+    },
+    "gridBackground": {
+      "color": "#111111",
+      "opacity": 0.5,
+    },
+    "mode": "edit",
+    "service": {
+      "col": 0,
+      "radius": 8,
+      "row": 0,
+      "showInGrid": true,
+    },
+    "window": {
+      "x": 80,
+      "y": 80,
+    },
+  },
+  "version": 5,
+}
+`;

@@ -1,0 +1,53 @@
+{
+  "version": 3,
+  "meta": {
+    "createdAt": "2025-04-01T00:00:00.000Z",
+    "updatedAt": "2025-04-01T00:00:00.000Z"
+  },
+  "ui": {
+    "alwaysOnTop": true,
+    "mode": "edit",
+    "buttonSize": { "w": 72, "h": 72 },
+    "grid": { "cols": 4, "rows": 3 },
+    "gridBackground": { "color": "#111111", "opacity": 0.5 },
+    "service": { "col": 0, "row": 0, "radius": 8, "showInGrid": true },
+    "clickThroughBackground": true,
+    "window": { "x": 80, "y": 80 }
+  },
+  "settings": {
+    "onCommandError": "continue",
+    "toastEnabled": true
+  },
+  "contacts": [
+    {
+      "id": "contact-v3-tcp",
+      "name": "StreamDeck",
+      "protocol": "tcp",
+      "target": { "host": "10.0.0.4", "port": 16622 }
+    }
+  ],
+  "buttons": [
+    {
+      "id": "btn-v3-icon",
+      "label": "Camera 1",
+      "style": {
+        "bgColor": "#1a1a1a",
+        "textColor": "#ffffff",
+        "fontSize": 13,
+        "radius": 8,
+        "wrapLabel": false,
+        "iconPath": "/var/folders/fake/cam1.png",
+        "iconDarken": 45,
+        "labelVisibility": "hover"
+      },
+      "position": { "col": 0, "row": 0 },
+      "commands": [
+        {
+          "protocol": "tcp",
+          "contactId": "contact-v3-tcp",
+          "payload": { "type": "hex", "value": "0x01 0x02 0xff" }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "name": "quickbutton",
+  "productName": "QuickButton",
+  "version": "0.1.4",
+  "private": true,
+  "main": "electron/main.cjs",
+  "description": "QuickButton desktop app skeleton (Electron + React + TypeScript)",
+  "scripts": {
+    "build:preload": "node scripts/build-preload.cjs",
+    "build:renderer": "vite build",
+    "predev": "npm run build:preload && npm run build:renderer",
+    "dev:renderer": "vite build --watch",
+    "dev:electron": "env -u ELECTRON_RUN_AS_NODE electron .",
+    "dev": "concurrently -k -n BUILD,ELECTRON \"npm run dev:renderer\" \"npm run dev:electron\"",
+    "prestart": "npm run build:preload && npm run build:renderer",
+    "start": "env -u ELECTRON_RUN_AS_NODE electron .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "pretest:e2e": "npm run build:preload && npm run build:renderer",
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "icons:generate": "node scripts/generate-icons.cjs",
+    "smoke": "node scripts/m3-smoke.cjs",
+    "prepack": "npm run build:preload && npm run build:renderer",
+    "pack": "electron-builder --dir",
+    "predist:mac": "npm run build:preload && npm run build:renderer",
+    "dist:mac": "electron-builder --mac",
+    "dist:mac:publish": "electron-builder --mac --publish always",
+    "predist:win": "npm run build:preload && npm run build:renderer",
+    "dist:win": "electron-builder --win",
+    "dist:win:publish": "electron-builder --win --publish always"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.59.1",
+    "@types/node": "^24.0.0",
+    "concurrently": "^9.2.1",
+    "electron": "^36.0.0",
+    "electron-builder": "^26.0.12",
+    "esbuild": "^0.28.0",
+    "eslint": "^10.2.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-n": "^17.24.0",
+    "globals": "^17.5.0",
+    "png-to-ico": "^3.0.1",
+    "pngjs": "^7.0.0",
+    "prettier": "^3.8.3",
+    "typescript": "^6.0.2",
+    "vite": "^8.0.8",
+    "vitest": "^4.1.4",
+    "wait-on": "^9.0.5"
+  },
+  "build": {
+    "appId": "com.quickbutton.app",
+    "productName": "QuickButton",
+    "files": [
+      "electron/**/*",
+      "!electron/preload.source.cjs",
+      "dist/renderer/**/*",
+      "src/shared/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "mac": {
+      "icon": "build/icon.icns",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.utilities",
+      "notarize": true,
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
+    },
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "artifactName": "${productName}-Setup-${version}-${arch}.${ext}"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "olegnovokhatskyi",
+      "repo": "QuickButton"
+    }
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.3"
+  }
+}
