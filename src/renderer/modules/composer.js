@@ -17,6 +17,7 @@ import { setupShortcuts } from "./shortcuts";
 import { createServiceController } from "./service";
 import { createStartupController } from "./startup";
 import { createWindowSizingController } from "./windowSizing";
+import { createAutoSaveController } from "./autosave";
 
 const MAX_BUTTONS = 100;
 const MAX_COMMANDS = 10;
@@ -86,6 +87,7 @@ let renderController = null;
 let runnerController = null;
 let windowSizingController = null;
 let historyController = null;
+let autoSaveController = null;
 
 const state = createRendererState();
 const store = createRendererStore(state);
@@ -132,6 +134,9 @@ function dispatch(command, options) {
   }
   if (opts.render !== false) {
     render();
+  }
+  if (command.type === "preset.setMode" || command.type === "preset.toggleMode") {
+    void ensureAutoSaveController().trigger("mode-switch", { force: true, silent: true });
   }
 }
 
@@ -226,7 +231,13 @@ function ensureServiceController() {
     confirmDiscardChanges,
     getButtonAtCell,
     onMinimizeWindow: () => window.quickButtonApi.window.minimize(),
-    onCloseWindow: () => window.quickButtonApi.window.close()
+    onCloseWindow: () => {
+      void ensureAutoSaveController()
+        .trigger("window-close", { force: true, silent: true })
+        .finally(() => {
+          window.quickButtonApi.window.close();
+        });
+    }
   });
   return serviceController;
 }
@@ -397,6 +408,23 @@ function ensureHistoryController() {
     render
   });
   return historyController;
+}
+
+function ensureAutoSaveController() {
+  if (autoSaveController) return autoSaveController;
+  autoSaveController = createAutoSaveController({
+    state,
+    getPresetPath: () => presetPath,
+    setPresetPath: (path) => {
+      presetPath = path;
+    },
+    savePreset: (input) => window.quickButtonApi.preset.save(input),
+    render,
+    setStatus,
+    showToast,
+    intervalMs: 30000
+  });
+  return autoSaveController;
 }
 
 function ensureEventsController() {
@@ -596,6 +624,7 @@ function bindEvents() {
 
 async function init() {
   await ensureStartupController().init();
+  ensureAutoSaveController().start();
 }
 
 installRendererDiagnostics({

@@ -1,20 +1,25 @@
 import { trackOnboardingStep } from "./onboarding";
+import type { ButtonLike, CommandLike, ContactLike, RendererStateLike } from "./domainTypes";
 
 const MAX_COMMAND_PAYLOAD_BYTES = 64 * 1024;
 
 type RunnerDeps = {
-  state: any;
+  state: RendererStateLike;
   gridEl: HTMLElement;
-  getContactById: (contactId: string) => any;
-  resolveCommandForSend: (command: any) => any;
+  getContactById: (contactId: string) => ContactLike | null;
+  resolveCommandForSend: (command: CommandLike) => unknown;
   setStatus: (message: string) => void;
   showToast: (message: string, type?: string) => void;
-  executeChain: (payload: any) => Promise<any>;
+  executeChain: (payload: {
+    buttonId: string;
+    chain: unknown[];
+    onError: "stop" | "continue";
+  }) => Promise<{ ok: boolean; steps: Array<{ ok: boolean; message?: string; code?: string }> }>;
 };
 
 export type RunnerController = {
-  validateCommand: (command: any) => string | null;
-  runButton: (btn: any) => Promise<void>;
+  validateCommand: (command: CommandLike) => string | null;
+  runButton: (btn: ButtonLike) => Promise<void>;
 };
 
 export function createRunnerController({
@@ -57,7 +62,7 @@ export function createRunnerController({
     }
   };
 
-  const validateCommand = (command: any): string | null => {
+  const validateCommand = (command: CommandLike): string | null => {
     if (!command.contactId) return "Select a connection";
     const contact = getContactById(command.contactId);
     if (!contact) return "Selected connection not found";
@@ -95,7 +100,7 @@ export function createRunnerController({
     return null;
   };
 
-  const runButton = async (btn: any): Promise<void> => {
+  const runButton = async (btn: ButtonLike): Promise<void> => {
     if (!btn?.commands?.length) {
       showToast("No commands configured");
       return;
@@ -123,10 +128,10 @@ export function createRunnerController({
       onError: state.preset.settings.onCommandError
     });
     const total = resolvedChain.length;
-    const okCount = result.steps.filter((s: any) => s.ok).length;
+    const okCount = result.steps.filter((s) => s.ok).length;
     const label = btn.label || "button";
     if (!result.ok) {
-      const failedStep = result.steps.find((item: any) => !item.ok);
+      const failedStep = result.steps.find((item) => !item.ok);
       const message = mapNetworkError(failedStep?.code, failedStep?.message ?? "unknown error");
       pulseButton(btn.id, "error");
       setStatus(`✗ ${label}: ${okCount}/${total} (${message})`);

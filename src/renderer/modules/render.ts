@@ -1,10 +1,12 @@
+import type { ButtonLike, RendererStateLike } from "./domainTypes";
+
 type RenderDeps = {
-  state: any;
+  state: RendererStateLike;
   getPresetPath: () => string | null;
   canEdit: () => boolean;
-  selectedButton: () => any;
-  selectedButtons: () => any[];
-  serviceConfig: () => any;
+  selectedButton: () => ButtonLike | null;
+  selectedButtons: () => ButtonLike[];
+  serviceConfig: () => { showInGrid?: boolean; radius?: number };
   syncCursorPollFromState: () => void;
   scheduleWindowResize: () => void;
   renderGrid: () => void;
@@ -49,7 +51,7 @@ type RenderDeps = {
 export type RenderController = {
   clickThroughBackgroundEnabled: () => boolean;
   gridBackgroundConfig: () => { color: string; opacity: number };
-  applyButtonStyleToElement: (uiEl: HTMLElement, btn: any) => void;
+  applyButtonStyleToElement: (uiEl: HTMLElement, btn: ButtonLike) => void;
   applyEditorFromSelection: () => void;
   syncControlsFromPreset: () => void;
   render: () => void;
@@ -83,7 +85,7 @@ export function createRenderController({
     return { color, opacity };
   };
 
-  const buttonIconSrc = (btn: any): string => {
+  const buttonIconSrc = (btn: ButtonLike | null): string => {
     const assetId = btn?.style?.iconAssetId;
     if (assetId && /^[a-f0-9]{40}$/.test(assetId)) {
       return `qb-asset://${assetId}`;
@@ -91,9 +93,9 @@ export function createRenderController({
     return "";
   };
 
-  const hasButtonIcon = (btn: any): boolean => Boolean(buttonIconSrc(btn));
+  const hasButtonIcon = (btn: ButtonLike | null): boolean => Boolean(buttonIconSrc(btn));
 
-  const syncIconClearEnabled = (btn: any): void => {
+  const syncIconClearEnabled = (btn: ButtonLike | null): void => {
     els.btnIconClearEl.disabled = !hasButtonIcon(btn);
   };
 
@@ -116,7 +118,7 @@ export function createRenderController({
     }
   };
 
-  const applyButtonStyleToElement = (uiEl: HTMLElement, btn: any): void => {
+  const applyButtonStyleToElement = (uiEl: HTMLElement, btn: ButtonLike): void => {
     uiEl.classList.toggle("wrap", Boolean(btn.style.wrapLabel));
     uiEl.style.backgroundColor = btn.style.bgColor;
     uiEl.style.color = btn.style.textColor;
@@ -139,7 +141,7 @@ export function createRenderController({
     }
   };
 
-  const updateButtonPreview = (btn: any): void => {
+  const updateButtonPreview = (btn: ButtonLike | null): void => {
     if (!els.btnPreviewEl) return;
     if (!btn) {
       els.btnPreviewEl.classList.remove("wrap", "has-bg-icon");
@@ -156,8 +158,8 @@ export function createRenderController({
   };
 
   const getMixed = (
-    buttons: any[],
-    getter: (btn: any) => unknown
+    buttons: ButtonLike[],
+    getter: (btn: ButtonLike) => unknown
   ): { mixed: boolean; value: unknown } => {
     if (buttons.length === 0) return { mixed: false, value: null };
     const first = getter(buttons[0]);

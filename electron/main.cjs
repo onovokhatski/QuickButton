@@ -15,7 +15,8 @@ const {
   protocol,
   screen,
   session,
-  shell
+  shell,
+  clipboard
 } = require("electron");
 const { pathToFileURL } = require("node:url");
 const log = require("./logger.cjs");
@@ -54,6 +55,17 @@ const MAX_PRESET_FILE_BYTES = 2 * 1024 * 1024;
 const MAX_COMMAND_PAYLOAD_BYTES = 64 * 1024;
 const RELEASES_URL =
   process.env.QB_RELEASES_URL || "https://github.com/olegnovokhatskyi/QuickButton/releases";
+const runtimeStats = {
+  testSend: { total: 0, ok: 0, failed: 0 },
+  chain: {
+    total: 0,
+    ok: 0,
+    failed: 0,
+    stepsTotal: 0,
+    stepsOk: 0,
+    stepsFailed: 0
+  }
+};
 
 function formatBytes(bytes) {
   if (!Number.isFinite(bytes) || bytes < 0) return "0 B";
@@ -545,6 +557,10 @@ async function buildDiagnosticsBundle() {
       summary: null,
       loadError: null
     },
+    runtimeStats: {
+      testSend: { ...runtimeStats.testSend },
+      chain: { ...runtimeStats.chain }
+    },
     logsTail: []
   };
 
@@ -565,6 +581,22 @@ async function buildDiagnosticsBundle() {
   }
   bundle.logsTail = await readLogTailLines(log.getLogFile(), 220);
   return bundle;
+}
+
+function diagnosticsSupportSummary(bundle) {
+  const presetSummary = bundle?.preset?.summary ?? {};
+  const testSendStats = bundle?.runtimeStats?.testSend ?? {};
+  const chainStats = bundle?.runtimeStats?.chain ?? {};
+  const lines = [
+    `QuickButton support summary`,
+    `Session: ${bundle?.sessionId ?? "n/a"}`,
+    `Version: ${bundle?.app?.version ?? "n/a"}${bundle?.app?.gitHash ? ` (${bundle.app.gitHash})` : ""}`,
+    `Platform: ${bundle?.platform?.os ?? "n/a"} ${bundle?.platform?.arch ?? ""}`.trim(),
+    `Preset: buttons=${presetSummary.buttons ?? 0}, contacts=${presetSummary.contacts ?? 0}, commands=${presetSummary.commands ?? 0}`,
+    `Runtime: testSend total=${testSendStats.total ?? 0}, ok=${testSendStats.ok ?? 0}, failed=${testSendStats.failed ?? 0}`,
+    `Runtime: chain total=${chainStats.total ?? 0}, ok=${chainStats.ok ?? 0}, failed=${chainStats.failed ?? 0}, steps=${chainStats.stepsTotal ?? 0}`
+  ];
+  return lines.join("\n");
 }
 
 async function exportDiagnosticsBundle() {
@@ -826,11 +858,14 @@ function registerIpc() {
 
   ipcMain.removeHandler(channels.runtimeTestSend);
   ipcMain.handle(channels.runtimeTestSend, async (_event, command) => {
+    runtimeStats.testSend.total += 1;
     try {
       await executeCommand(command);
+      runtimeStats.testSend.ok += 1;
       log.info("testSend ok", command?.protocol, command?.target?.host, command?.target?.port);
       return { ok: true };
     } catch (error) {
+      runtimeStats.testSend.failed += 1;
       const message = error instanceof Error ? error.message : "Unknown send error";
       log.error(
         "testSend failed:",
@@ -844,6 +879,7 @@ function registerIpc() {
   });
 
   defineIpc(channels.runtimeExecuteChain, async (_event, payload) => {
+    runtimeStats.chain.total += 1;
     const chain = Array.isArray(payload.chain) ? payload.chain.slice(0, MAX_COMMANDS) : [];
     const steps = [];
     for (let index = 0; index < chain.length; index += 1) {
@@ -872,7 +908,14 @@ function registerIpc() {
       steps.push({ index, ...result });
       if (!result.ok && payload.onError === "stop") break;
     }
-    return { ok: steps.every((step) => step.ok), steps };
+    const ok = steps.every((step) => step.ok);
+    const okSteps = steps.filter((step) => step.ok).length;
+    runtimeStats.chain.stepsTotal += steps.length;
+    runtimeStats.chain.stepsOk += okSteps;
+    runtimeStats.chain.stepsFailed += steps.length - okSteps;
+    if (ok) runtimeStats.chain.ok += 1;
+    else runtimeStats.chain.failed += 1;
+    return { ok, steps };
   });
 
   ipcMain.removeHandler(channels.presetOpen);
@@ -1091,6 +1134,24 @@ function buildApplicationMenu() {
                   message: "Failed to export diagnostics bundle.",
                   detail: err?.message ?? String(err)
                 });
+              });
+          }
+        },
+        {
+          label: "Copy support summary",
+          click: () => {
+            buildDiagnosticsBundle()
+              .then((bundle) => {
+                clipboard.writeText(diagnosticsSupportSummary(bundle));
+                const parent = mainWindow && !mainWindow.isDestroyed() ? mainWindow : undefined;
+                return dialog.showMessageBox(parent, {
+                  type: "info",
+                  title: "Support summary",
+                  message: "Copied support summary to clipboard."
+                });
+              })
+              .catch((err) => {
+                log.error("copy support summary failed:", err?.message ?? err);
               });
           }
         },

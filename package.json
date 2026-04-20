@@ -1,7 +1,7 @@
 {
   "name": "quickbutton",
   "productName": "QuickButton",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "private": true,
   "main": "electron/main.cjs",
   "description": "QuickButton desktop app skeleton (Electron + React + TypeScript)",

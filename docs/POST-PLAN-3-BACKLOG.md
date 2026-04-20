@@ -44,26 +44,26 @@
 
 ## P1 (следующий слой зрелости)
 
-### 3) State typing hardening (A3 follow-up)
+### 3) State typing hardening (A3 follow-up) — completed
 
 **Зачем:** снизить регрессии при дальнейших фичах и рефакторинге.
 
-**Задачи:**
-- Убрать крупные `any` в `events/render/editor/composer`.
-- Довести типы домена до единого источника (`shared/types` или аналог).
-- Добавить типовые guard/utility для границ IPC.
+**Сделано:**
+- Введены доменные типы renderer (`src/renderer/modules/domainTypes.ts`) для UI/preset/button/command.
+- Сужены типы в критичных модулях `events`, `render`, `runner` (убраны широкие `any` в ключевых местах потока).
+- Сохранена совместимость с текущим command-layer и e2e/unit тестами.
 
 **Критерий готовности:**
 - Типизация покрывает core UI-flow без широких `any` в критичных модулях.
 
-### 4) Diagnostics bundle v2 (D3 follow-up)
+### 4) Diagnostics bundle v2 (D3 follow-up) — completed
 
 **Зачем:** ускорить triage сложных багов без ручного сбора контекста.
 
-**Задачи:**
-- Добавить anonymized runtime counters (ошибки send, retries, timeout rate).
-- Добавить версию schema diagnostics bundle.
-- Добавить “copy support summary” в UI (краткий отчёт для issue).
+**Сделано:**
+- Добавлены anonymized runtime counters в main-процессе (`runtimeTestSend`/`runtimeExecuteChain`) и включены в diagnostics bundle.
+- Добавлен быстрый пункт `Help -> Copy support summary` для копирования краткого отчёта в буфер обмена.
+- Экспорт diagnostics bundle расширен runtime-метриками для более быстрого triage.
 
 **Критерий готовности:**
 - Один export даёт достаточно данных для первичной диагностики.

@@ -1,21 +1,22 @@
 import type { AppCommand, AppDispatchOptions } from "./appCommands";
+import type { ButtonLike, CommandLike, RendererStateLike } from "./domainTypes";
 import { trackOnboardingStep } from "./onboarding";
 
 type EventsDeps = {
-  state: any;
+  state: RendererStateLike;
   canEdit: () => boolean;
   dispatch: (command: AppCommand, options?: AppDispatchOptions) => void;
   render: () => void;
   setStatus: (message: string) => void;
   showToast: (message: string, type?: string) => void;
   nowId: (prefix: string) => string;
-  defaultCommand: (name?: string) => any;
-  selectedButton: () => any;
-  selectedButtons: () => any[];
-  runButton: (btn: any) => Promise<void>;
-  getButtonAtCell: (col: number, row: number) => any;
+  defaultCommand: (name?: string) => CommandLike;
+  selectedButton: () => ButtonLike | null;
+  selectedButtons: () => ButtonLike[];
+  runButton: (btn: ButtonLike) => Promise<void>;
+  getButtonAtCell: (col: number, row: number) => ButtonLike | null;
   isServiceCell: (col: number, row: number) => boolean;
-  updateClickThroughFromPointer: (event?: any) => void;
+  updateClickThroughFromPointer: (event?: MouseEvent) => void;
   setWindowIgnoreMouseEvents: (ignore: boolean) => void;
   handleServiceAction: (action: string | null, source?: string | null) => boolean;
   bindConnectionsEvents: () => void;
@@ -167,7 +168,7 @@ export function createEventsController({
           return;
         }
         if (action === "viewToggleServiceGrid") {
-          const next = Boolean((payload as any)?.value);
+          const next = Boolean((payload as { value?: unknown } | undefined)?.value);
           els.showServiceInGridEl.checked = next;
           dispatch({ type: "service.setShowInGrid", value: next });
           return;
@@ -358,7 +359,7 @@ export function createEventsController({
       if (selected.length === 0) return;
       dispatch({
         type: "button.setBgColor",
-        buttonIds: selected.map((b: { id: string }) => b.id),
+        buttonIds: selected.map((b) => b.id),
         color: els.btnBgEl.value
       }, { historyGroup: "button-bg" });
     });
@@ -368,7 +369,7 @@ export function createEventsController({
       if (selected.length === 0) return;
       dispatch({
         type: "button.setTextColor",
-        buttonIds: selected.map((b: { id: string }) => b.id),
+        buttonIds: selected.map((b) => b.id),
         color: els.btnFgEl.value
       }, { historyGroup: "button-fg" });
     });
@@ -378,7 +379,7 @@ export function createEventsController({
       if (selected.length === 0 || !els.btnFontEl.value) return;
       dispatch({
         type: "button.setFontSize",
-        buttonIds: selected.map((b: { id: string }) => b.id),
+        buttonIds: selected.map((b) => b.id),
         fontSize: Number(els.btnFontEl.value)
       }, { historyGroup: "button-font" });
     });
@@ -394,7 +395,7 @@ export function createEventsController({
       if (selected.length === 0 || !els.btnRadiusEl.value) return;
       dispatch({
         type: "button.setRadius",
-        buttonIds: selected.map((b: { id: string }) => b.id),
+        buttonIds: selected.map((b) => b.id),
         radius: Number(els.btnRadiusEl.value)
       }, { historyGroup: "button-radius" });
     });
@@ -410,8 +411,9 @@ export function createEventsController({
           return;
         }
         dispatch({ type: "button.setIconAssetId", buttonId: btn.id, assetId: result.assetId });
-      } catch (err: any) {
-        showToast(`Failed to pick icon: ${err?.message ?? err}`);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        showToast(`Failed to pick icon: ${message}`);
       }
     });
     els.btnIconClearEl.addEventListener("click", () => {
