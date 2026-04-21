@@ -43,13 +43,14 @@ type EventsDeps = {
     gridBgOpacityValueEl: HTMLElement;
     btnLabelEl: HTMLInputElement;
     btnBgEl: HTMLInputElement;
+    btnBgTransparentEl: HTMLButtonElement;
+    btnBorderColorEl: HTMLInputElement;
     btnFgEl: HTMLInputElement;
     btnFontEl: HTMLInputElement;
     btnWrapEl: HTMLElement;
     btnRadiusEl: HTMLInputElement;
     btnIconPickEl: HTMLElement;
     btnIconClearEl: HTMLElement;
-    btnIconDarkenEl: HTMLInputElement;
     btnLabelVisibilityEl: HTMLInputElement | HTMLSelectElement;
     serviceRadiusEl: HTMLInputElement;
   };
@@ -363,6 +364,28 @@ export function createEventsController({
         color: els.btnBgEl.value
       }, { historyGroup: "button-bg" });
     });
+    els.btnBgTransparentEl.addEventListener("click", () => {
+      if (!canEdit()) return;
+      const selected = selectedButtons();
+      if (selected.length === 0) return;
+      const currentPressed = els.btnBgTransparentEl.getAttribute("aria-pressed");
+      const nextTransparent = currentPressed !== "true";
+      dispatch({
+        type: "button.setBgOpacity",
+        buttonIds: selected.map((b) => b.id),
+        bgOpacity: nextTransparent ? 0 : 100
+      }, { historyGroup: "button-bg-transparent" });
+    });
+    els.btnBorderColorEl.addEventListener("input", () => {
+      if (!canEdit()) return;
+      const selected = selectedButtons();
+      if (selected.length === 0) return;
+      dispatch({
+        type: "button.setBorderColor",
+        buttonIds: selected.map((b) => b.id),
+        color: els.btnBorderColorEl.value
+      }, { historyGroup: "button-border-color" });
+    });
     els.btnFgEl.addEventListener("input", () => {
       if (!canEdit()) return;
       const selected = selectedButtons();
@@ -422,16 +445,6 @@ export function createEventsController({
       if (!btn) return;
       if (!btn.style.iconAssetId && !btn.style.iconPath) return;
       dispatch({ type: "button.clearIcon", buttonId: btn.id });
-    });
-    els.btnIconDarkenEl.addEventListener("input", () => {
-      if (!canEdit()) return;
-      const btn = selectedButton();
-      if (!btn) return;
-      dispatch({
-        type: "button.setIconDarken",
-        buttonId: btn.id,
-        iconDarken: Number(els.btnIconDarkenEl.value)
-      }, { historyGroup: "button-icon-darken" });
     });
     els.btnLabelVisibilityEl.addEventListener("change", () => {
       if (!canEdit()) return;

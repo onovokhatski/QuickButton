@@ -17,6 +17,9 @@ export type CommandLike = {
 
 export type ButtonStyleLike = {
   bgColor: string;
+  /** 0–100, 100 = opaque */
+  bgOpacity?: number;
+  borderColor?: string;
   textColor: string;
   fontSize: number;
   radius: number;

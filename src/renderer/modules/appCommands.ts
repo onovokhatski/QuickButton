@@ -19,6 +19,8 @@ export type AppCommand =
   | { type: "layout.moveButtonToCell"; buttonId: string; col: number; row: number }
   | { type: "button.setLabel"; buttonId: string; label: string }
   | { type: "button.setBgColor"; buttonIds: string[]; color: string }
+  | { type: "button.setBgOpacity"; buttonIds: string[]; bgOpacity: number }
+  | { type: "button.setBorderColor"; buttonIds: string[]; color: string }
   | { type: "button.setTextColor"; buttonIds: string[]; color: string }
   | { type: "button.setFontSize"; buttonIds: string[]; fontSize: number }
   | { type: "button.setRadius"; buttonIds: string[]; radius: number }
@@ -273,6 +275,18 @@ export function deriveCommandHistoryDelta(
           })
           .filter(Boolean) as AppCommand[]
       };
+    case "button.setBorderColor":
+      return {
+        forward: [command],
+        backward: command.buttonIds
+          .map((id) => {
+            const btn = findButton(state, id);
+            if (!btn) return null;
+            const oldColor = String((btn.style as Record<string, unknown> | undefined)?.borderColor ?? "#2f2f2f");
+            return { type: "button.setBorderColor", buttonIds: [id], color: oldColor } as AppCommand;
+          })
+          .filter(Boolean) as AppCommand[]
+      };
     case "button.setFontSize":
       return {
         forward: [command],
@@ -294,6 +308,18 @@ export function deriveCommandHistoryDelta(
             if (!btn) return null;
             const old = Number((btn.style as Record<string, unknown> | undefined)?.radius ?? 8);
             return { type: "button.setRadius", buttonIds: [id], radius: old } as AppCommand;
+          })
+          .filter(Boolean) as AppCommand[]
+      };
+    case "button.setBgOpacity":
+      return {
+        forward: [command],
+        backward: command.buttonIds
+          .map((id) => {
+            const btn = findButton(state, id);
+            if (!btn) return null;
+            const old = Number((btn.style as Record<string, unknown> | undefined)?.bgOpacity ?? 100);
+            return { type: "button.setBgOpacity", buttonIds: [id], bgOpacity: old } as AppCommand;
           })
           .filter(Boolean) as AppCommand[]
       };
@@ -668,11 +694,27 @@ export function applyAppCommand(rawState: unknown, command: AppCommand): void {
       }
       break;
     }
+    case "button.setBgOpacity": {
+      for (const id of command.buttonIds) {
+        const btn = findButton(state, id);
+        if (!btn) continue;
+        ensureStyle(btn).bgOpacity = command.bgOpacity;
+      }
+      break;
+    }
     case "button.setTextColor": {
       for (const id of command.buttonIds) {
         const btn = findButton(state, id);
         if (!btn) continue;
         ensureStyle(btn).textColor = command.color;
+      }
+      break;
+    }
+    case "button.setBorderColor": {
+      for (const id of command.buttonIds) {
+        const btn = findButton(state, id);
+        if (!btn) continue;
+        ensureStyle(btn).borderColor = command.color;
       }
       break;
     }

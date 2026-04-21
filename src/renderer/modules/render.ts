@@ -33,12 +33,13 @@ type RenderDeps = {
     gridBgOpacityValueEl: HTMLElement;
     btnLabelEl: HTMLInputElement;
     btnBgEl: HTMLInputElement;
+    btnBgTransparentEl: HTMLButtonElement;
+    btnBorderColorEl: HTMLInputElement;
     btnFgEl: HTMLInputElement;
     btnFontEl: HTMLInputElement;
     btnWrapEl: HTMLElement;
     btnRadiusEl: HTMLInputElement;
     btnIconClearEl: HTMLButtonElement;
-    btnIconDarkenEl: HTMLInputElement;
     btnLabelVisibilityEl: HTMLInputElement | HTMLSelectElement;
     btnPreviewEl: HTMLElement;
     noSelectionEl: HTMLElement;
@@ -120,7 +121,9 @@ export function createRenderController({
 
   const applyButtonStyleToElement = (uiEl: HTMLElement, btn: ButtonLike): void => {
     uiEl.classList.toggle("wrap", Boolean(btn.style.wrapLabel));
-    uiEl.style.backgroundColor = btn.style.bgColor;
+    const transparentBg = Number(btn.style.bgOpacity ?? 100) <= 0;
+    uiEl.style.backgroundColor = transparentBg ? "transparent" : btn.style.bgColor;
+    uiEl.style.borderColor = btn.style.borderColor ?? "#2f2f2f";
     uiEl.style.color = btn.style.textColor;
     uiEl.style.setProperty("--btn-text-color", btn.style.textColor);
     uiEl.style.fontSize = `${btn.style.fontSize}px`;
@@ -130,8 +133,7 @@ export function createRenderController({
     const iconSrc = buttonIconSrc(btn);
     if (iconSrc) {
       uiEl.classList.add("has-bg-icon");
-      const darken = Math.max(0, Math.min(100, Number(btn.style.iconDarken ?? 35))) / 100;
-      uiEl.style.backgroundImage = `linear-gradient(rgba(0,0,0,${darken}), rgba(0,0,0,${darken})), url("${iconSrc}")`;
+      uiEl.style.backgroundImage = `url("${iconSrc}")`;
       uiEl.style.backgroundSize = "cover";
       uiEl.style.backgroundPosition = "center";
       uiEl.style.backgroundRepeat = "no-repeat";
@@ -184,17 +186,25 @@ export function createRenderController({
       els.btnLabelEl.value = labelTitle;
       els.btnLabelEl.disabled = true;
       const bg = getMixed(selected, (item) => item.style.bgColor);
+      const border = getMixed(selected, (item) => item.style.borderColor ?? "#2f2f2f");
       const fg = getMixed(selected, (item) => item.style.textColor);
       const font = getMixed(selected, (item) => item.style.fontSize);
       const radius = getMixed(selected, (item) => item.style.radius);
+      const bgOp = getMixed(selected, (item) => item.style.bgOpacity ?? 100);
       els.btnBgEl.value = String(bg.value ?? "#252525");
+      els.btnBorderColorEl.value = String(border.value ?? "#2f2f2f");
       els.btnFgEl.value = String(fg.value ?? "#ffffff");
       els.btnBgEl.title = bg.mixed ? "mixed values" : "";
+      els.btnBorderColorEl.title = border.mixed ? "mixed values" : "";
       els.btnFgEl.title = fg.mixed ? "mixed values" : "";
       els.btnFontEl.value = font.mixed ? "" : String(font.value ?? 13);
       els.btnFontEl.placeholder = font.mixed ? "mixed" : "";
       els.btnRadiusEl.value = radius.mixed ? "" : String(radius.value ?? 8);
       els.btnRadiusEl.placeholder = radius.mixed ? "mixed" : "";
+      const transparentOn = Number(bgOp.value ?? 100) <= 0;
+      els.btnBgTransparentEl.classList.toggle("active", !bgOp.mixed && transparentOn);
+      els.btnBgTransparentEl.setAttribute("aria-pressed", bgOp.mixed ? "mixed" : transparentOn ? "true" : "false");
+      els.btnBgTransparentEl.title = bgOp.mixed ? "mixed values" : "";
       syncIconClearEnabled(null);
       els.btnWrapEl.classList.remove("active");
       els.btnWrapEl.setAttribute("aria-pressed", "false");
@@ -207,12 +217,17 @@ export function createRenderController({
       els.btnRadiusEl.placeholder = "";
       els.btnLabelEl.value = btn.label;
       els.btnBgEl.value = btn.style.bgColor;
+      els.btnBorderColorEl.value = btn.style.borderColor ?? "#2f2f2f";
       els.btnFgEl.value = btn.style.textColor;
       els.btnBgEl.title = "";
+      els.btnBorderColorEl.title = "";
       els.btnFgEl.title = "";
       els.btnFontEl.value = String(btn.style.fontSize);
       els.btnRadiusEl.value = String(btn.style.radius);
-      els.btnIconDarkenEl.value = String(btn.style.iconDarken ?? 35);
+      const bgOp = Number(btn.style.bgOpacity ?? 100);
+      els.btnBgTransparentEl.classList.toggle("active", bgOp <= 0);
+      els.btnBgTransparentEl.setAttribute("aria-pressed", bgOp <= 0 ? "true" : "false");
+      els.btnBgTransparentEl.title = "";
       (els.btnLabelVisibilityEl as HTMLInputElement).value = btn.style.labelVisibility ?? "always";
       syncIconClearEnabled(btn);
       const wrapActive = Boolean(btn.style.wrapLabel);
@@ -221,9 +236,13 @@ export function createRenderController({
     } else {
       els.btnLabelEl.disabled = false;
       els.btnBgEl.title = "";
+      els.btnBorderColorEl.title = "";
       els.btnFgEl.title = "";
       els.btnFontEl.placeholder = "";
       els.btnRadiusEl.placeholder = "";
+      els.btnBgTransparentEl.classList.remove("active");
+      els.btnBgTransparentEl.setAttribute("aria-pressed", "false");
+      els.btnBgTransparentEl.title = "";
     }
     updateButtonPreview(isBulkMode ? null : btn);
     els.serviceRadiusEl.value = String(serviceConfig().radius ?? 8);
@@ -277,6 +296,8 @@ export function createRenderController({
       "add-command",
       "btn-label",
       "btn-bg",
+      "btn-bg-transparent",
+      "btn-border-color",
       "btn-fg",
       "btn-font",
       "btn-radius",

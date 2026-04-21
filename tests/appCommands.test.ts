@@ -70,6 +70,28 @@ describe("applyAppCommand", () => {
     expect(state.preset.buttons[1].style.bgColor).toBe("#abcdef");
   });
 
+  test("button.setBgOpacity updates multiple buttons", () => {
+    const state = makeState() as any;
+    applyAppCommand(state, {
+      type: "button.setBgOpacity",
+      buttonIds: ["a", "b"],
+      bgOpacity: 40
+    });
+    expect(state.preset.buttons[0].style.bgOpacity).toBe(40);
+    expect(state.preset.buttons[1].style.bgOpacity).toBe(40);
+  });
+
+  test("button.setBorderColor updates multiple buttons", () => {
+    const state = makeState() as any;
+    applyAppCommand(state, {
+      type: "button.setBorderColor",
+      buttonIds: ["a", "b"],
+      color: "#778899"
+    });
+    expect(state.preset.buttons[0].style.borderColor).toBe("#778899");
+    expect(state.preset.buttons[1].style.borderColor).toBe("#778899");
+  });
+
   test("layout.deleteButton removes and resets selection", () => {
     const state = makeState() as any;
     applyAppCommand(state, { type: "layout.deleteButton", buttonId: "a" });
@@ -277,6 +299,36 @@ describe("applyAppCommand", () => {
     expect(delta?.backward).toEqual([
       { type: "button.setBgColor", buttonIds: ["a"], color: "#111111" },
       { type: "button.setBgColor", buttonIds: ["b"], color: "#222222" }
+    ]);
+  });
+
+  test("derive delta for bulk bg opacity keeps per-button inverse", () => {
+    const state = makeState() as any;
+    state.preset.buttons[0].style.bgOpacity = 80;
+    state.preset.buttons[1].style.bgOpacity = 55;
+    const delta = deriveCommandHistoryDelta(state, {
+      type: "button.setBgOpacity",
+      buttonIds: ["a", "b"],
+      bgOpacity: 20
+    });
+    expect(delta?.backward).toEqual([
+      { type: "button.setBgOpacity", buttonIds: ["a"], bgOpacity: 80 },
+      { type: "button.setBgOpacity", buttonIds: ["b"], bgOpacity: 55 }
+    ]);
+  });
+
+  test("derive delta for bulk border color keeps per-button inverse", () => {
+    const state = makeState() as any;
+    state.preset.buttons[0].style.borderColor = "#111111";
+    state.preset.buttons[1].style.borderColor = "#222222";
+    const delta = deriveCommandHistoryDelta(state, {
+      type: "button.setBorderColor",
+      buttonIds: ["a", "b"],
+      color: "#334455"
+    });
+    expect(delta?.backward).toEqual([
+      { type: "button.setBorderColor", buttonIds: ["a"], color: "#111111" },
+      { type: "button.setBorderColor", buttonIds: ["b"], color: "#222222" }
     ]);
   });
 

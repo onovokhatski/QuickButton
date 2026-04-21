@@ -232,6 +232,7 @@ function sanitizePreset(inputPreset) {
       const label = String(button?.label ?? `Btn ${index + 1}`);
       const style = {
         bgColor: String(button?.style?.bgColor ?? "#252525"),
+        borderColor: String(button?.style?.borderColor ?? "#2f2f2f"),
         textColor: String(button?.style?.textColor ?? "#ffffff"),
         fontSize: clampInt(button?.style?.fontSize, 8, 42, 13),
         radius: clampInt(button?.style?.radius, 0, 24, 8)
@@ -246,6 +247,7 @@ function sanitizePreset(inputPreset) {
         style.iconPath = String(button.style.iconPath);
       }
       if (button?.style?.wrapLabel) style.wrapLabel = true;
+      style.bgOpacity = clampInt(button?.style?.bgOpacity, 0, 100, 100);
       style.iconDarken = clampInt(button?.style?.iconDarken, 0, 100, 35);
       const labelVisibility = button?.style?.labelVisibility;
       style.labelVisibility =

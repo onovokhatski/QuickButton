@@ -29,6 +29,7 @@ exports[`preset migrations — fixtures > v0 fixture: sanitize produces stable s
       },
       "style": {
         "bgColor": "#202020",
+        "bgOpacity": 100,
         "fontSize": 13,
         "iconDarken": 35,
         "labelVisibility": "always",
@@ -119,6 +120,7 @@ exports[`preset migrations — fixtures > v1 fixture: sanitize produces stable s
       },
       "style": {
         "bgColor": "#8b0000",
+        "bgOpacity": 100,
         "fontSize": 14,
         "iconDarken": 35,
         "labelVisibility": "always",
@@ -191,6 +193,7 @@ exports[`preset migrations — fixtures > v2 fixture: sanitize produces stable s
       },
       "style": {
         "bgColor": "#264653",
+        "bgOpacity": 100,
         "fontSize": 13,
         "iconDarken": 35,
         "labelVisibility": "always",
@@ -276,6 +279,7 @@ exports[`preset migrations — fixtures > v3 fixture: sanitize produces stable s
       },
       "style": {
         "bgColor": "#1a1a1a",
+        "bgOpacity": 100,
         "fontSize": 13,
         "iconDarken": 45,
         "iconPath": "/var/folders/fake/cam1.png",
