@@ -49,6 +49,15 @@ export function setupShortcuts({
   runButton
 }: SetupShortcutsDeps): ShortcutsController {
   let focusTrap: FocusTrapController | null = null;
+  const isShortcutsOpenKey = (event: KeyboardEvent, isEditable: boolean): boolean => {
+    if (event.key === "F1") return true;
+    if (!isEditable && event.key === "?") return true;
+    // Layout-safe open shortcut:
+    // - Shift+Slash catches "?" even when event.key differs by locale.
+    // - Cmd/Ctrl+Slash provides a reliable fallback on keyboards without F1.
+    if (event.code === "Slash" && (event.shiftKey || event.metaKey || event.ctrlKey)) return true;
+    return false;
+  };
   const setOverlayVisible = (nextVisible: boolean): void => {
     const overlay = document.getElementById("shortcuts-overlay");
     if (!overlay) return;
@@ -78,7 +87,7 @@ export function setupShortcuts({
       return;
     }
 
-    if (event.key === "F1" || (event.key === "?" && !isEditable)) {
+    if (isShortcutsOpenKey(event, isEditable)) {
       event.preventDefault();
       setOverlayVisible(true);
       return;
@@ -125,6 +134,7 @@ export function setupShortcuts({
 
   const shortcutsOverlayEl = document.getElementById("shortcuts-overlay");
   const shortcutsDismissEl = document.getElementById("shortcuts-dismiss");
+  const shortcutsOpenEl = document.getElementById("show-shortcuts-btn");
   if (shortcutsOverlayEl && shortcutsDismissEl) {
     shortcutsDismissEl.addEventListener("click", () => setOverlayVisible(false));
     shortcutsOverlayEl.addEventListener("click", (ev) => {
@@ -133,6 +143,7 @@ export function setupShortcuts({
       }
     });
   }
+  shortcutsOpenEl?.addEventListener("click", () => setOverlayVisible(true));
   return {
     toggleOverlay: (force?: boolean) => {
       if (typeof force === "boolean") {
