@@ -136,29 +136,38 @@ export function createEditorController({
     }
 
     command.name = typeof command.name === "string" ? command.name : "";
+    command.enabled = command.enabled !== false;
     command.isCollapsed = Boolean(command.isCollapsed);
-    const contactSelect = document.createElement("select");
-    contactSelect.disabled = editorLocked;
-    appendOption(contactSelect, "", "Select connection");
-    contacts().forEach((contact) => {
-      const option = document.createElement("option");
-      option.value = contact.id;
-      option.textContent = `${contact.name} (${contact.protocol} ${contact.target.host}:${contact.target.port})`;
-      contactSelect.appendChild(option);
-    });
-    contactSelect.value = command.contactId ?? "";
-    contactSelect.addEventListener("change", () => {
-      const btn = selectedButton();
-      if (!btn?.id) return;
-      dispatch({
-        type: "button.setCommandContactId",
-        buttonId: btn.id,
-        commandIndex,
-        contactId: contactSelect.value
+    const isDelay = command.kind === "delay";
+    if (isDelay) {
+      command.delayMs = Math.max(0, Math.min(120000, Math.trunc(Number(command.delayMs) || 0)));
+    }
+    let contactSelect: HTMLSelectElement | null = null;
+    let selectedContact: ReturnType<typeof getContactById> = null;
+    if (!isDelay) {
+      const selectEl = document.createElement("select");
+      contactSelect = selectEl;
+      selectEl.disabled = editorLocked;
+      appendOption(selectEl, "", "Select connection");
+      contacts().forEach((contact) => {
+        const option = document.createElement("option");
+        option.value = contact.id;
+        option.textContent = `${contact.name} (${contact.protocol} ${contact.target.host}:${contact.target.port})`;
+        selectEl.appendChild(option);
       });
-    });
-
-    const selectedContact = getContactById(command.contactId);
+      selectEl.value = command.contactId ?? "";
+      selectEl.addEventListener("change", () => {
+        const btn = selectedButton();
+        if (!btn?.id) return;
+        dispatch({
+          type: "button.setCommandContactId",
+          buttonId: btn.id,
+          commandIndex,
+          contactId: selectEl.value
+        });
+      });
+      selectedContact = getContactById(command.contactId);
+    }
     const commandNameInput = document.createElement("input");
     commandNameInput.placeholder = "Command name";
     commandNameInput.value = command.name;
@@ -196,14 +205,41 @@ export function createEditorController({
       if (!btn?.id) return;
       dispatch({ type: "button.toggleCommandCollapsed", buttonId: btn.id, commandIndex });
     });
+    const enabledBtn = document.createElement("button");
+    enabledBtn.className = "icon-action command-enabled-toggle";
+    if (command.enabled) {
+      enabledBtn.classList.add("is-enabled");
+    } else {
+      enabledBtn.classList.add("is-disabled");
+    }
+    enabledBtn.disabled = editorLocked;
+    enabledBtn.setAttribute("aria-label", command.enabled ? "Deactivate command" : "Activate command");
+    enabledBtn.title = command.enabled ? "Deactivate command" : "Activate command";
+    enabledBtn.appendChild(
+      command.enabled
+        ? icon(["M8 3.2v5", "M5.2 5.4a4 4 0 1 0 5.6 0"])
+        : icon(["M8 3.2v5", "M5.2 5.4a4 4 0 1 0 5.6 0", "M3.2 12.8l9.6-9.6"])
+    );
+    enabledBtn.addEventListener("click", () => {
+      if (editorLocked) return;
+      const btn = selectedButton();
+      if (!btn?.id) return;
+      dispatch({
+        type: "button.replaceCommand",
+        buttonId: btn.id,
+        commandIndex,
+        command: { ...command, enabled: !command.enabled }
+      });
+    });
 
     const testBtn = document.createElement("button");
     testBtn.className = "icon-action";
     testBtn.title = "Test send";
     testBtn.setAttribute("aria-label", "Test send");
     testBtn.appendChild(icon(["M3 8h8", "M8.5 4.5L12 8l-3.5 3.5"]));
-    testBtn.disabled = !selectedContact;
+    testBtn.disabled = isDelay || !selectedContact;
     testBtn.addEventListener("click", async () => {
+      if (isDelay) return;
       const validationError = validateCommand(command);
       if (validationError) {
         showToast(validationError);
@@ -252,8 +288,12 @@ export function createEditorController({
       headerRow.classList.add("is-collapsed");
       const commandNameText = document.createElement("div");
       commandNameText.className = "command-name-text";
+      if (!command.enabled) {
+        commandNameText.classList.add("inactive");
+      }
       commandNameText.textContent = command.name.trim() || `Command ${commandIndex + 1}`;
       headerRow.appendChild(commandNameText);
+      headerRow.appendChild(enabledBtn);
       headerRow.appendChild(collapseBtn);
       wrap.appendChild(headerRow);
       return wrap;
@@ -261,12 +301,49 @@ export function createEditorController({
 
     headerRow.appendChild(commandNameInput);
     headerRow.appendChild(removeBtn);
-    headerRow.appendChild(testBtn);
+    if (!isDelay) {
+      headerRow.appendChild(testBtn);
+    }
     headerRow.appendChild(collapseBtn);
     wrap.appendChild(headerRow);
-    wrap.appendChild(contactSelect);
+    if (contactSelect) {
+      wrap.appendChild(contactSelect);
+    }
 
-    if (selectedContact?.protocol === "osc-udp") {
+    if (isDelay) {
+      const delayRow = document.createElement("div");
+      delayRow.className = "command-inline-row";
+      const delayLabel = document.createElement("div");
+      delayLabel.className = "muted";
+      delayLabel.textContent = "Delay (ms)";
+      const delayInput = document.createElement("input");
+      delayInput.type = "number";
+      delayInput.min = "0";
+      delayInput.max = "120000";
+      delayInput.step = "10";
+      delayInput.value = String(command.delayMs ?? 0);
+      delayInput.disabled = editorLocked;
+      delayInput.addEventListener("input", () => {
+        const btn = selectedButton();
+        if (!btn?.id) return;
+        dispatch(
+          {
+            type: "button.replaceCommand",
+            buttonId: btn.id,
+            commandIndex,
+            command: {
+              ...command,
+              kind: "delay",
+              delayMs: Math.max(0, Math.min(120000, Math.trunc(Number(delayInput.value) || 0)))
+            }
+          },
+          { render: false, historyGroup: `cmd-delay-${btn.id}-${commandIndex}` }
+        );
+      });
+      delayRow.appendChild(delayLabel);
+      delayRow.appendChild(delayInput);
+      wrap.appendChild(delayRow);
+    } else if (selectedContact?.protocol === "osc-udp") {
       const address = document.createElement("input");
       address.placeholder = "OSC address";
       address.value = command.osc?.address ?? "/ping";

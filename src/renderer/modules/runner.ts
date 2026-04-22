@@ -63,6 +63,13 @@ export function createRunnerController({
   };
 
   const validateCommand = (command: CommandLike): string | null => {
+    if (command.kind === "delay") {
+      const delayMs = Number(command.delayMs);
+      if (!Number.isFinite(delayMs) || delayMs < 0 || delayMs > 120000) {
+        return "Delay must be in range 0..120000 ms";
+      }
+      return null;
+    }
     if (!command.contactId) return "Select a connection";
     const contact = getContactById(command.contactId);
     if (!contact) return "Selected connection not found";
@@ -107,6 +114,7 @@ export function createRunnerController({
     }
     pulseButton(btn.id);
     for (const command of btn.commands) {
+      if (command.enabled === false) continue;
       const validationError = validateCommand(command);
       if (validationError) {
         showToast(validationError);
@@ -115,12 +123,24 @@ export function createRunnerController({
     }
     const resolvedChain = [];
     for (const command of btn.commands) {
+      if (command.enabled === false) continue;
+      if (command.kind === "delay") {
+        resolvedChain.push({
+          kind: "delay",
+          delayMs: Math.max(0, Math.min(120000, Math.trunc(Number(command.delayMs) || 0)))
+        });
+        continue;
+      }
       const resolved = resolveCommandForSend(command);
       if (!resolved) {
         showToast("Selected connection not found");
         return;
       }
       resolvedChain.push(resolved);
+    }
+    if (!resolvedChain.length) {
+      showToast("No active commands configured");
+      return;
     }
     const result = await executeChain({
       buttonId: btn.id,

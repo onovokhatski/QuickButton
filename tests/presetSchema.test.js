@@ -123,6 +123,12 @@ describe("sanitizeCommand", () => {
     expect(cmd.contactId).toBe("c-1");
     expect(cmd.target).toBeUndefined();
   });
+
+  it("sanitizes delay command kind and range", () => {
+    const cmd = sanitizeCommand({ kind: "delay", name: "Pause", delayMs: 999999 });
+    expect(cmd.kind).toBe("delay");
+    expect(cmd.delayMs).toBe(120000);
+  });
 });
 
 describe("sanitizeContact", () => {
@@ -180,6 +186,14 @@ describe("validateCommand", () => {
     expect(
       validateCommand({ protocol: "udp", contactId: "c1", payload: { value: "x" } })
     ).toBeNull();
+  });
+
+  it("accepts valid delay command", () => {
+    expect(validateCommand({ kind: "delay", delayMs: 750 })).toBeNull();
+  });
+
+  it("rejects invalid delay command range", () => {
+    expect(validateCommand({ kind: "delay", delayMs: -1 })).toMatch(/delay/i);
   });
 });
 

@@ -886,6 +886,14 @@ function registerIpc() {
       const command = chain[index];
       let result;
       try {
+        if (command?.kind === "delay") {
+          const delayMs = Math.max(0, Math.min(120000, Math.trunc(Number(command.delayMs) || 0)));
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+          result = { ok: true };
+          log.info(`chain[${index}] delay ${delayMs}ms`);
+          steps.push({ index, ...result });
+          continue;
+        }
         await executeCommand(command);
         result = { ok: true };
         log.info(

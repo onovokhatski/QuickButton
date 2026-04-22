@@ -68,11 +68,11 @@
               <div class="section">
                 <div class="section-title">Label</div>
                 <div class="button-name-row">
-                  <input id="btn-label" placeholder="Button name" />
+                  <input id="btn-label" class="has-tip" data-tip="Button label" placeholder="Button name" />
                   <button
                     id="delete-button"
-                    class="icon-action"
-                    title="Delete button"
+                    class="icon-action has-tip"
+                    data-tip="Delete button"
                     aria-label="Delete button"
                   >
                     <svg viewBox="0 0 16 16" aria-hidden="true">
@@ -90,7 +90,13 @@
                 <div id="btn-preview-wrap" class="btn-preview-wrap">
                   <div class="section-title">Preview</div>
                   <div id="btn-preview-stage" class="btn-preview-stage">
-                    <button id="btn-preview" class="user-btn" type="button" tabindex="-1">
+                    <button
+                      id="btn-preview"
+                      class="user-btn has-tip"
+                      type="button"
+                      tabindex="-1"
+                      data-tip="Button preview"
+                    >
                       Label
                     </button>
                   </div>
@@ -98,33 +104,26 @@
 
                 <div class="section">
                   <div class="section-title">Text</div>
-                  <div class="field-grid">
-                    <label class="field">
-                      <span class="field-label">Color</span>
-                      <input id="btn-fg" type="color" value="#ffffff" />
+                  <div class="text-controls-row text-controls-row-top">
+                    <label class="color-swatch-wrap has-tip" data-tip="Text color">
+                      <input id="btn-fg" class="color-round" type="color" value="#ffffff" />
                     </label>
-                    <label
-                      class="field"
-                      title="When to show the button label: always, only on hover/focus, or never"
-                    >
-                      <span class="field-label">Label</span>
+                    <label class="field has-tip text-size-field" data-tip="Text size">
+                      <input id="btn-font" class="compact-number" type="number" min="8" max="42" value="13" />
+                    </label>
+                    <label class="field has-tip text-visibility-field" data-tip="When to show the button label">
                       <select id="btn-label-visibility">
                         <option value="always">always</option>
                         <option value="hover">hover</option>
                         <option value="never">never</option>
                       </select>
                     </label>
-                    <label class="field">
-                      <span class="field-label">Size</span>
-                      <input id="btn-font" type="number" min="8" max="42" value="13" />
-                    </label>
-                    <label class="field">
-                      <span class="field-label">Wrap</span>
+                    <label class="field text-wrap-field">
                       <button
                         id="btn-wrap"
-                        class="icon-action icon-toggle"
+                        class="icon-action icon-toggle has-tip"
                         type="button"
-                        title="Wrap label text"
+                        data-tip="Wrap label text"
                         aria-label="Wrap label text"
                         aria-pressed="false"
                       >
@@ -137,6 +136,95 @@
                       </button>
                     </label>
                   </div>
+                  <div class="text-controls-row text-controls-row-bottom">
+                    <div class="text-align-row has-tip" data-tip="Text alignment">
+                      <div class="align-group" role="group" aria-label="Horizontal text alignment">
+                        <button
+                          id="btn-align-x-left"
+                          class="icon-action icon-toggle"
+                          type="button"
+                          aria-label="Align text left"
+                          aria-pressed="false"
+                        >
+                          <svg viewBox="0 0 16 16" aria-hidden="true">
+                            <path d="M3 3.5v9"></path>
+                            <path d="M5 5h8"></path>
+                            <path d="M5 8h6"></path>
+                            <path d="M5 11h7"></path>
+                          </svg>
+                        </button>
+                        <button
+                          id="btn-align-x-center"
+                          class="icon-action icon-toggle"
+                          type="button"
+                          aria-label="Align text center"
+                          aria-pressed="true"
+                        >
+                          <svg viewBox="0 0 16 16" aria-hidden="true">
+                            <path d="M8 3.5v9"></path>
+                            <path d="M4 5h8"></path>
+                            <path d="M5 8h6"></path>
+                            <path d="M4 11h8"></path>
+                          </svg>
+                        </button>
+                        <button
+                          id="btn-align-x-right"
+                          class="icon-action icon-toggle"
+                          type="button"
+                          aria-label="Align text right"
+                          aria-pressed="false"
+                        >
+                          <svg viewBox="0 0 16 16" aria-hidden="true">
+                            <path d="M13 3.5v9"></path>
+                            <path d="M3 5h8"></path>
+                            <path d="M5 8h6"></path>
+                            <path d="M4 11h7"></path>
+                          </svg>
+                        </button>
+                      </div>
+                      <div class="align-group" role="group" aria-label="Vertical text alignment">
+                        <button
+                          id="btn-align-y-top"
+                          class="icon-action icon-toggle"
+                          type="button"
+                          aria-label="Align text top"
+                          aria-pressed="false"
+                        >
+                          <svg viewBox="0 0 16 16" aria-hidden="true">
+                            <path d="M2.5 3.5h11"></path>
+                            <path d="M8 5.5v7"></path>
+                            <path d="M5.5 5.5h5"></path>
+                          </svg>
+                        </button>
+                        <button
+                          id="btn-align-y-middle"
+                          class="icon-action icon-toggle"
+                          type="button"
+                          aria-label="Align text middle"
+                          aria-pressed="true"
+                        >
+                          <svg viewBox="0 0 16 16" aria-hidden="true">
+                            <path d="M2.5 8h11"></path>
+                            <path d="M8 3.5v9"></path>
+                            <path d="M5.5 6.5h5"></path>
+                          </svg>
+                        </button>
+                        <button
+                          id="btn-align-y-bottom"
+                          class="icon-action icon-toggle"
+                          type="button"
+                          aria-label="Align text bottom"
+                          aria-pressed="false"
+                        >
+                          <svg viewBox="0 0 16 16" aria-hidden="true">
+                            <path d="M2.5 12.5h11"></path>
+                            <path d="M8 3.5v7"></path>
+                            <path d="M5.5 10.5h5"></path>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -144,32 +232,35 @@
                 <div class="section">
                   <div class="section-title">Background</div>
                   <div class="field-row bg-controls-row">
-                    <input
-                      id="btn-bg"
-                      class="color-round"
-                      type="color"
-                      value="#252525"
-                      title="Background color"
-                      aria-label="Background color"
-                    />
-                    <button
-                      id="btn-bg-transparent"
-                      class="icon-action icon-toggle"
-                      type="button"
-                      title="Transparent background"
-                      aria-label="Transparent background"
-                      aria-pressed="false"
-                    >
-                      <svg viewBox="0 0 16 16" aria-hidden="true">
-                        <path d="M3 3h10v10H3z"></path>
-                        <path d="M3 13l10-10"></path>
-                      </svg>
-                    </button>
+                    <label class="color-swatch-wrap has-tip" data-tip="Background color">
+                      <input
+                        id="btn-bg"
+                        class="color-round"
+                        type="color"
+                        value="#252525"
+                        aria-label="Background color"
+                      />
+                    </label>
+                    <label class="icon-wrap has-tip" data-tip="Transparent background">
+                      <button
+                        id="btn-bg-transparent"
+                        class="icon-action icon-toggle has-tip"
+                        type="button"
+                        data-tip="Transparent background"
+                        aria-label="Transparent background"
+                        aria-pressed="false"
+                      >
+                        <svg viewBox="0 0 16 16" aria-hidden="true">
+                          <path d="M3 3h10v10H3z"></path>
+                          <path d="M3 13l10-10"></path>
+                        </svg>
+                      </button>
+                    </label>
                     <button
                       id="btn-icon-pick"
                       type="button"
-                      class="icon-action"
-                      title="Choose background image"
+                      class="icon-action has-tip"
+                      data-tip="Choose background image"
                       aria-label="Choose background image"
                     >
                       <svg viewBox="0 0 16 16" aria-hidden="true">
@@ -181,8 +272,8 @@
                     <button
                       id="btn-icon-clear"
                       type="button"
-                      class="icon-action"
-                      title="Remove image"
+                      class="icon-action has-tip"
+                      data-tip="Remove image"
                       aria-label="Remove image"
                     >
                       <svg viewBox="0 0 16 16" aria-hidden="true">
@@ -199,16 +290,17 @@
                 <div class="section">
                   <div class="section-title">Border</div>
                   <div class="field-row border-controls-row">
-                    <input
-                      id="btn-border-color"
-                      class="color-round"
-                      type="color"
-                      value="#2f2f2f"
-                      title="Border color"
-                      aria-label="Border color"
-                    />
-                    <label class="field border-radius-field">
-                      <span class="field-label-icon" title="Corner radius" aria-hidden="true">
+                    <label class="color-swatch-wrap has-tip" data-tip="Border color">
+                      <input
+                        id="btn-border-color"
+                        class="color-round"
+                        type="color"
+                        value="#2f2f2f"
+                        aria-label="Border color"
+                      />
+                    </label>
+                    <label class="field border-radius-field has-tip" data-tip="Corner radius">
+                      <span class="field-label-icon" aria-hidden="true">
                         <svg viewBox="0 0 16 16">
                           <path d="M6 3.5H4.9a1.4 1.4 0 0 0-1.4 1.4V6"></path>
                           <path d="M10 3.5h1.1a1.4 1.4 0 0 1 1.4 1.4V6"></path>
@@ -231,8 +323,35 @@
               </div>
 
               <div class="section">
-                <div class="section-title">Commands</div>
-                <button id="add-command">Add command</button>
+                <div class="command-actions-row">
+                  <div class="section-title command-row-title">Commands</div>
+                  <button
+                    id="add-command"
+                    class="icon-action has-tip"
+                    type="button"
+                    data-tip="Add command"
+                    aria-label="Add command"
+                  >
+                    <svg viewBox="0 0 16 16" aria-hidden="true">
+                      <path d="M8 3.2v9.6"></path>
+                      <path d="M3.2 8h9.6"></path>
+                    </svg>
+                  </button>
+                  <button
+                    id="add-delay"
+                    class="icon-action has-tip"
+                    type="button"
+                    data-tip="Add delay"
+                    aria-label="Add delay"
+                  >
+                    <svg viewBox="0 0 16 16" aria-hidden="true">
+                      <circle cx="8" cy="8" r="5.5"></circle>
+                      <path d="M8 5.2v3.1l2.2 1.4"></path>
+                      <path d="M13.5 8h1.2"></path>
+                      <path d="M14.1 7.4v1.2"></path>
+                    </svg>
+                  </button>
+                </div>
                 <div id="commands"></div>
               </div>
             </div>

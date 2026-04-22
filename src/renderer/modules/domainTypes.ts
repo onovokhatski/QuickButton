@@ -1,12 +1,17 @@
 export type RightTab = "button" | "grid" | "connections";
 export type SelectionTarget = "button" | "service" | null;
 export type LabelVisibility = "always" | "hover" | "never";
+export type TextAlignX = "left" | "center" | "right";
+export type TextAlignY = "top" | "middle" | "bottom";
 export type Protocol = "udp" | "tcp" | "osc-udp";
 export type CommandErrorPolicy = "stop" | "continue";
 
 export type CommandLike = {
+  kind?: "command" | "delay";
+  enabled?: boolean;
   protocol?: Protocol;
   name?: string;
+  delayMs?: number;
   contactId?: string;
   isCollapsed?: boolean;
   target?: { host: string; port: number; persistent?: boolean; keepAliveMs?: number };
@@ -28,6 +33,8 @@ export type ButtonStyleLike = {
   iconPath?: string;
   iconDarken?: number;
   labelVisibility?: LabelVisibility;
+  textAlignX?: TextAlignX;
+  textAlignY?: TextAlignY;
 };
 
 export type ButtonLike = {

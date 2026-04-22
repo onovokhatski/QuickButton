@@ -142,6 +142,16 @@ function sanitizeOscArg(rawArg) {
 }
 
 function sanitizeCommand(rawCommand) {
+  const kind = rawCommand?.kind === "delay" ? "delay" : "command";
+  if (kind === "delay") {
+    return {
+      kind: "delay",
+      name: String(rawCommand?.name ?? ""),
+      enabled: rawCommand?.enabled !== false,
+      isCollapsed: Boolean(rawCommand?.isCollapsed),
+      delayMs: clampInt(rawCommand?.delayMs, 0, 120000, 500)
+    };
+  }
   const protocol = rawCommand?.protocol;
   const contactId = rawCommand?.contactId ? String(rawCommand.contactId) : undefined;
   const name = String(rawCommand?.name ?? "");
@@ -155,8 +165,10 @@ function sanitizeCommand(rawCommand) {
 
   if (protocol === "osc-udp") {
     const command = {
+      kind: "command",
       protocol: "osc-udp",
       name,
+      enabled: rawCommand?.enabled !== false,
       isCollapsed,
       osc: {
         address: String(rawCommand?.osc?.address ?? "/ping"),
@@ -170,8 +182,10 @@ function sanitizeCommand(rawCommand) {
 
   const normalizedProtocol = protocol === "tcp" ? "tcp" : "udp";
   const command = {
+    kind: "command",
     protocol: normalizedProtocol,
     name,
+    enabled: rawCommand?.enabled !== false,
     isCollapsed,
     payload: {
       type: rawCommand?.payload?.type === "hex" ? "hex" : "string",
@@ -252,6 +266,11 @@ function sanitizePreset(inputPreset) {
       const labelVisibility = button?.style?.labelVisibility;
       style.labelVisibility =
         labelVisibility === "hover" || labelVisibility === "never" ? labelVisibility : "always";
+      const textAlignX = button?.style?.textAlignX;
+      style.textAlignX =
+        textAlignX === "left" || textAlignX === "right" ? textAlignX : "center";
+      const textAlignY = button?.style?.textAlignY;
+      style.textAlignY = textAlignY === "top" || textAlignY === "bottom" ? textAlignY : "middle";
       return {
         id,
         label,
@@ -306,6 +325,13 @@ function sanitizePreset(inputPreset) {
 
 function validateCommand(command) {
   if (!command || typeof command !== "object") return "Invalid command";
+  if (command.kind === "delay") {
+    const delayMs = Number(command.delayMs);
+    if (!Number.isFinite(delayMs) || delayMs < 0 || delayMs > 120000) {
+      return "Delay must be in range 0..120000 ms";
+    }
+    return null;
+  }
   if (!command.protocol) return "Protocol is required";
   if (!command.contactId) {
     if (!command.target?.host) return "Host is required";

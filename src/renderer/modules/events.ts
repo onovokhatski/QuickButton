@@ -11,6 +11,7 @@ type EventsDeps = {
   showToast: (message: string, type?: string) => void;
   nowId: (prefix: string) => string;
   defaultCommand: (name?: string) => CommandLike;
+  defaultDelayCommand: (name?: string) => CommandLike;
   selectedButton: () => ButtonLike | null;
   selectedButtons: () => ButtonLike[];
   runButton: (btn: ButtonLike) => Promise<void>;
@@ -47,6 +48,12 @@ type EventsDeps = {
     btnBorderColorEl: HTMLInputElement;
     btnFgEl: HTMLInputElement;
     btnFontEl: HTMLInputElement;
+    btnAlignXLeftEl: HTMLButtonElement;
+    btnAlignXCenterEl: HTMLButtonElement;
+    btnAlignXRightEl: HTMLButtonElement;
+    btnAlignYTopEl: HTMLButtonElement;
+    btnAlignYMiddleEl: HTMLButtonElement;
+    btnAlignYBottomEl: HTMLButtonElement;
     btnWrapEl: HTMLElement;
     btnRadiusEl: HTMLInputElement;
     btnIconPickEl: HTMLElement;
@@ -69,6 +76,7 @@ export function createEventsController({
   showToast,
   nowId,
   defaultCommand,
+  defaultDelayCommand,
   selectedButton,
   selectedButtons,
   runButton,
@@ -261,6 +269,23 @@ export function createEventsController({
         command: defaultCommand(`Command ${btn.commands.length + 1}`)
       });
     });
+    document.getElementById("add-delay")?.addEventListener("click", () => {
+      if (!canEdit()) {
+        showToast("Switch to edit mode to edit commands");
+        return;
+      }
+      const btn = selectedButton();
+      if (!btn) return;
+      if (btn.commands.length >= MAX_COMMANDS) {
+        showToast("Max 10 commands per button");
+        return;
+      }
+      dispatch({
+        type: "button.appendCommand",
+        buttonId: btn.id,
+        command: defaultDelayCommand(`Delay ${btn.commands.length + 1}`)
+      });
+    });
 
     [
       els.gridColsEl,
@@ -405,6 +430,66 @@ export function createEventsController({
         buttonIds: selected.map((b) => b.id),
         fontSize: Number(els.btnFontEl.value)
       }, { historyGroup: "button-font" });
+    });
+    els.btnAlignXLeftEl.addEventListener("click", () => {
+      if (!canEdit()) return;
+      const selected = selectedButtons();
+      if (selected.length === 0) return;
+      dispatch({
+        type: "button.setTextAlignX",
+        buttonIds: selected.map((b) => b.id),
+        align: "left"
+      }, { historyGroup: "button-align-x" });
+    });
+    els.btnAlignXCenterEl.addEventListener("click", () => {
+      if (!canEdit()) return;
+      const selected = selectedButtons();
+      if (selected.length === 0) return;
+      dispatch({
+        type: "button.setTextAlignX",
+        buttonIds: selected.map((b) => b.id),
+        align: "center"
+      }, { historyGroup: "button-align-x" });
+    });
+    els.btnAlignXRightEl.addEventListener("click", () => {
+      if (!canEdit()) return;
+      const selected = selectedButtons();
+      if (selected.length === 0) return;
+      dispatch({
+        type: "button.setTextAlignX",
+        buttonIds: selected.map((b) => b.id),
+        align: "right"
+      }, { historyGroup: "button-align-x" });
+    });
+    els.btnAlignYTopEl.addEventListener("click", () => {
+      if (!canEdit()) return;
+      const selected = selectedButtons();
+      if (selected.length === 0) return;
+      dispatch({
+        type: "button.setTextAlignY",
+        buttonIds: selected.map((b) => b.id),
+        align: "top"
+      }, { historyGroup: "button-align-y" });
+    });
+    els.btnAlignYMiddleEl.addEventListener("click", () => {
+      if (!canEdit()) return;
+      const selected = selectedButtons();
+      if (selected.length === 0) return;
+      dispatch({
+        type: "button.setTextAlignY",
+        buttonIds: selected.map((b) => b.id),
+        align: "middle"
+      }, { historyGroup: "button-align-y" });
+    });
+    els.btnAlignYBottomEl.addEventListener("click", () => {
+      if (!canEdit()) return;
+      const selected = selectedButtons();
+      if (selected.length === 0) return;
+      dispatch({
+        type: "button.setTextAlignY",
+        buttonIds: selected.map((b) => b.id),
+        align: "bottom"
+      }, { historyGroup: "button-align-y" });
     });
     els.btnWrapEl.addEventListener("click", () => {
       if (!canEdit()) return;

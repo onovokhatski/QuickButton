@@ -37,6 +37,12 @@ type RenderDeps = {
     btnBorderColorEl: HTMLInputElement;
     btnFgEl: HTMLInputElement;
     btnFontEl: HTMLInputElement;
+    btnAlignXLeftEl: HTMLButtonElement;
+    btnAlignXCenterEl: HTMLButtonElement;
+    btnAlignXRightEl: HTMLButtonElement;
+    btnAlignYTopEl: HTMLButtonElement;
+    btnAlignYMiddleEl: HTMLButtonElement;
+    btnAlignYBottomEl: HTMLButtonElement;
     btnWrapEl: HTMLElement;
     btnRadiusEl: HTMLInputElement;
     btnIconClearEl: HTMLButtonElement;
@@ -128,6 +134,13 @@ export function createRenderController({
     uiEl.style.setProperty("--btn-text-color", btn.style.textColor);
     uiEl.style.fontSize = `${btn.style.fontSize}px`;
     uiEl.style.borderRadius = `${btn.style.radius}px`;
+    const alignX = btn.style.textAlignX ?? "center";
+    const alignY = btn.style.textAlignY ?? "middle";
+    uiEl.style.justifyContent =
+      alignX === "left" ? "flex-start" : alignX === "right" ? "flex-end" : "center";
+    uiEl.style.alignItems =
+      alignY === "top" ? "flex-start" : alignY === "bottom" ? "flex-end" : "center";
+    uiEl.style.textAlign = alignX;
     const labelVisibility = btn.style.labelVisibility ?? "always";
     uiEl.dataset.labelVisibility = labelVisibility;
     const iconSrc = buttonIconSrc(btn);
@@ -169,6 +182,30 @@ export function createRenderController({
     return { mixed, value: first };
   };
 
+  const setToggleState = (
+    el: HTMLButtonElement,
+    active: boolean,
+    mixed = false
+  ): void => {
+    el.classList.toggle("active", active && !mixed);
+    el.setAttribute("aria-pressed", mixed ? "mixed" : active ? "true" : "false");
+    el.title = mixed ? "mixed values" : "";
+  };
+
+  const setAlignControls = (
+    alignX: "left" | "center" | "right",
+    alignY: "top" | "middle" | "bottom",
+    mixedX = false,
+    mixedY = false
+  ): void => {
+    setToggleState(els.btnAlignXLeftEl, alignX === "left", mixedX);
+    setToggleState(els.btnAlignXCenterEl, alignX === "center", mixedX);
+    setToggleState(els.btnAlignXRightEl, alignX === "right", mixedX);
+    setToggleState(els.btnAlignYTopEl, alignY === "top", mixedY);
+    setToggleState(els.btnAlignYMiddleEl, alignY === "middle", mixedY);
+    setToggleState(els.btnAlignYBottomEl, alignY === "bottom", mixedY);
+  };
+
   const applyEditorFromSelection = (): void => {
     const btn = state.ui.selectedTarget === "button" ? selectedButton() : null;
     const selected = state.ui.selectedTarget === "button" ? selectedButtons() : [];
@@ -191,6 +228,8 @@ export function createRenderController({
       const font = getMixed(selected, (item) => item.style.fontSize);
       const radius = getMixed(selected, (item) => item.style.radius);
       const bgOp = getMixed(selected, (item) => item.style.bgOpacity ?? 100);
+      const alignX = getMixed(selected, (item) => item.style.textAlignX ?? "center");
+      const alignY = getMixed(selected, (item) => item.style.textAlignY ?? "middle");
       els.btnBgEl.value = String(bg.value ?? "#252525");
       els.btnBorderColorEl.value = String(border.value ?? "#2f2f2f");
       els.btnFgEl.value = String(fg.value ?? "#ffffff");
@@ -205,6 +244,12 @@ export function createRenderController({
       els.btnBgTransparentEl.classList.toggle("active", !bgOp.mixed && transparentOn);
       els.btnBgTransparentEl.setAttribute("aria-pressed", bgOp.mixed ? "mixed" : transparentOn ? "true" : "false");
       els.btnBgTransparentEl.title = bgOp.mixed ? "mixed values" : "";
+      setAlignControls(
+        (alignX.value as "left" | "center" | "right") ?? "center",
+        (alignY.value as "top" | "middle" | "bottom") ?? "middle",
+        alignX.mixed,
+        alignY.mixed
+      );
       syncIconClearEnabled(null);
       els.btnWrapEl.classList.remove("active");
       els.btnWrapEl.setAttribute("aria-pressed", "false");
@@ -228,6 +273,7 @@ export function createRenderController({
       els.btnBgTransparentEl.classList.toggle("active", bgOp <= 0);
       els.btnBgTransparentEl.setAttribute("aria-pressed", bgOp <= 0 ? "true" : "false");
       els.btnBgTransparentEl.title = "";
+      setAlignControls(btn.style.textAlignX ?? "center", btn.style.textAlignY ?? "middle");
       (els.btnLabelVisibilityEl as HTMLInputElement).value = btn.style.labelVisibility ?? "always";
       syncIconClearEnabled(btn);
       const wrapActive = Boolean(btn.style.wrapLabel);
@@ -243,6 +289,7 @@ export function createRenderController({
       els.btnBgTransparentEl.classList.remove("active");
       els.btnBgTransparentEl.setAttribute("aria-pressed", "false");
       els.btnBgTransparentEl.title = "";
+      setAlignControls("center", "middle");
     }
     updateButtonPreview(isBulkMode ? null : btn);
     els.serviceRadiusEl.value = String(serviceConfig().radius ?? 8);
@@ -300,6 +347,12 @@ export function createRenderController({
       "btn-border-color",
       "btn-fg",
       "btn-font",
+      "btn-align-x-left",
+      "btn-align-x-center",
+      "btn-align-x-right",
+      "btn-align-y-top",
+      "btn-align-y-middle",
+      "btn-align-y-bottom",
       "btn-radius",
       "btn-icon-pick",
       "btn-icon-clear",

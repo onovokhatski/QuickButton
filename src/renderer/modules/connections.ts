@@ -48,6 +48,8 @@ export type ConnectionsController = {
   getContactById: (contactId: string) => Contact | null;
   defaultContact: () => Contact;
   resolveCommandForSend: (command: {
+    kind?: string;
+    delayMs?: number;
     contactId?: string;
     payload?: { type: string; value: string };
     osc?: { address: string; args: unknown[] };
@@ -112,11 +114,19 @@ export function createConnectionsController({
   });
 
   const resolveCommandForSend = (command: {
+    kind?: string;
+    delayMs?: number;
     contactId?: string;
     payload?: { type: string; value: string };
     osc?: { address: string; args: unknown[] };
     retry?: { count?: number; jitterMs?: number };
   }): unknown | null => {
+    if (command.kind === "delay") {
+      return {
+        kind: "delay",
+        delayMs: Math.max(0, Math.min(120000, Math.trunc(Number(command.delayMs) || 0)))
+      };
+    }
     const contact = getContactById(command.contactId ?? "");
     if (!contact) {
       return null;

@@ -51,6 +51,12 @@ const {
   btnBorderColorEl,
   btnFgEl,
   btnFontEl,
+  btnAlignXLeftEl,
+  btnAlignXCenterEl,
+  btnAlignXRightEl,
+  btnAlignYTopEl,
+  btnAlignYMiddleEl,
+  btnAlignYBottomEl,
   btnWrapEl,
   btnRadiusEl,
   btnIconPickEl,
@@ -153,10 +159,22 @@ function confirmDiscardChanges() {
 function defaultCommand(commandName = "") {
   const firstContact = contacts()[0];
   return {
+    kind: "command",
     name: commandName,
+    enabled: true,
     isCollapsed: false,
     contactId: firstContact?.id ?? "",
     payload: { type: "string", value: "PING" }
+  };
+}
+
+function defaultDelayCommand(commandName = "") {
+  return {
+    kind: "delay",
+    name: commandName,
+    enabled: true,
+    isCollapsed: false,
+    delayMs: 500
   };
 }
 
@@ -374,6 +392,12 @@ function ensureRenderController() {
       btnBorderColorEl,
       btnFgEl,
       btnFontEl,
+      btnAlignXLeftEl,
+      btnAlignXCenterEl,
+      btnAlignXRightEl,
+      btnAlignYTopEl,
+      btnAlignYMiddleEl,
+      btnAlignYBottomEl,
       btnWrapEl,
       btnRadiusEl,
       btnIconClearEl,
@@ -439,6 +463,7 @@ function ensureEventsController() {
     showToast,
     nowId,
     defaultCommand,
+    defaultDelayCommand,
     selectedButton,
     selectedButtons,
     runButton,
@@ -488,6 +513,12 @@ function ensureEventsController() {
       btnBorderColorEl,
       btnFgEl,
       btnFontEl,
+      btnAlignXLeftEl,
+      btnAlignXCenterEl,
+      btnAlignXRightEl,
+      btnAlignYTopEl,
+      btnAlignYMiddleEl,
+      btnAlignYBottomEl,
       btnWrapEl,
       btnRadiusEl,
       btnIconPickEl,

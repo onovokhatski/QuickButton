@@ -23,6 +23,8 @@ export type AppCommand =
   | { type: "button.setBorderColor"; buttonIds: string[]; color: string }
   | { type: "button.setTextColor"; buttonIds: string[]; color: string }
   | { type: "button.setFontSize"; buttonIds: string[]; fontSize: number }
+  | { type: "button.setTextAlignX"; buttonIds: string[]; align: "left" | "center" | "right" }
+  | { type: "button.setTextAlignY"; buttonIds: string[]; align: "top" | "middle" | "bottom" }
   | { type: "button.setRadius"; buttonIds: string[]; radius: number }
   | { type: "button.toggleWrapLabel"; buttonId: string }
   | { type: "button.setIconAssetId"; buttonId: string; assetId: string }
@@ -296,6 +298,32 @@ export function deriveCommandHistoryDelta(
             if (!btn) return null;
             const old = Number((btn.style as Record<string, unknown> | undefined)?.fontSize ?? 13);
             return { type: "button.setFontSize", buttonIds: [id], fontSize: old } as AppCommand;
+          })
+          .filter(Boolean) as AppCommand[]
+      };
+    case "button.setTextAlignX":
+      return {
+        forward: [command],
+        backward: command.buttonIds
+          .map((id) => {
+            const btn = findButton(state, id);
+            if (!btn) return null;
+            const oldRaw = String((btn.style as Record<string, unknown> | undefined)?.textAlignX ?? "center");
+            const old = oldRaw === "left" || oldRaw === "right" ? oldRaw : "center";
+            return { type: "button.setTextAlignX", buttonIds: [id], align: old } as AppCommand;
+          })
+          .filter(Boolean) as AppCommand[]
+      };
+    case "button.setTextAlignY":
+      return {
+        forward: [command],
+        backward: command.buttonIds
+          .map((id) => {
+            const btn = findButton(state, id);
+            if (!btn) return null;
+            const oldRaw = String((btn.style as Record<string, unknown> | undefined)?.textAlignY ?? "middle");
+            const old = oldRaw === "top" || oldRaw === "bottom" ? oldRaw : "middle";
+            return { type: "button.setTextAlignY", buttonIds: [id], align: old } as AppCommand;
           })
           .filter(Boolean) as AppCommand[]
       };
@@ -723,6 +751,22 @@ export function applyAppCommand(rawState: unknown, command: AppCommand): void {
         const btn = findButton(state, id);
         if (!btn) continue;
         ensureStyle(btn).fontSize = command.fontSize;
+      }
+      break;
+    }
+    case "button.setTextAlignX": {
+      for (const id of command.buttonIds) {
+        const btn = findButton(state, id);
+        if (!btn) continue;
+        ensureStyle(btn).textAlignX = command.align;
+      }
+      break;
+    }
+    case "button.setTextAlignY": {
+      for (const id of command.buttonIds) {
+        const btn = findButton(state, id);
+        if (!btn) continue;
+        ensureStyle(btn).textAlignY = command.align;
       }
       break;
     }

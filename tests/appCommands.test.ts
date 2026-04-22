@@ -92,6 +92,28 @@ describe("applyAppCommand", () => {
     expect(state.preset.buttons[1].style.borderColor).toBe("#778899");
   });
 
+  test("button.setTextAlignX updates multiple buttons", () => {
+    const state = makeState() as any;
+    applyAppCommand(state, {
+      type: "button.setTextAlignX",
+      buttonIds: ["a", "b"],
+      align: "right"
+    });
+    expect(state.preset.buttons[0].style.textAlignX).toBe("right");
+    expect(state.preset.buttons[1].style.textAlignX).toBe("right");
+  });
+
+  test("button.setTextAlignY updates multiple buttons", () => {
+    const state = makeState() as any;
+    applyAppCommand(state, {
+      type: "button.setTextAlignY",
+      buttonIds: ["a", "b"],
+      align: "top"
+    });
+    expect(state.preset.buttons[0].style.textAlignY).toBe("top");
+    expect(state.preset.buttons[1].style.textAlignY).toBe("top");
+  });
+
   test("layout.deleteButton removes and resets selection", () => {
     const state = makeState() as any;
     applyAppCommand(state, { type: "layout.deleteButton", buttonId: "a" });
@@ -329,6 +351,21 @@ describe("applyAppCommand", () => {
     expect(delta?.backward).toEqual([
       { type: "button.setBorderColor", buttonIds: ["a"], color: "#111111" },
       { type: "button.setBorderColor", buttonIds: ["b"], color: "#222222" }
+    ]);
+  });
+
+  test("derive delta for bulk text align x keeps per-button inverse", () => {
+    const state = makeState() as any;
+    state.preset.buttons[0].style.textAlignX = "left";
+    state.preset.buttons[1].style.textAlignX = "right";
+    const delta = deriveCommandHistoryDelta(state, {
+      type: "button.setTextAlignX",
+      buttonIds: ["a", "b"],
+      align: "center"
+    });
+    expect(delta?.backward).toEqual([
+      { type: "button.setTextAlignX", buttonIds: ["a"], align: "left" },
+      { type: "button.setTextAlignX", buttonIds: ["b"], align: "right" }
     ]);
   });
 

@@ -73,10 +73,16 @@ export interface OscPayload {
 }
 
 export interface Command {
+  kind?: "command";
   protocol: Protocol;
   target: Target;
   payload?: Payload;
   osc?: OscPayload;
+}
+
+export interface DelayCommand {
+  kind: "delay";
+  delayMs: number;
 }
 
 export interface ButtonConfig {
@@ -84,7 +90,7 @@ export interface ButtonConfig {
   label: string;
   style: ButtonStyle;
   position: ButtonPosition;
-  commands: Command[];
+  commands: Array<Command | DelayCommand>;
 }
 
 export interface Contact {
