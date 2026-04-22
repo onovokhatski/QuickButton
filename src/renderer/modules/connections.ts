@@ -135,7 +135,7 @@ export function createConnectionsController({
       protocol: Contact["protocol"];
       target: { host: string; port: number; persistent?: boolean; keepAliveMs?: number };
       osc?: { address: string; args: unknown[] };
-      payload?: { type: string; value: string };
+      payload?: { type: "string" | "hex" | "json"; value: string };
       retry?: { count?: number; jitterMs?: number };
     } = {
       protocol: contact.protocol,
@@ -156,7 +156,13 @@ export function createConnectionsController({
       resolved.osc = command.osc ?? { address: "/ping", args: [] };
       return resolved;
     }
-    resolved.payload = command.payload ?? { type: "string", value: "" };
+    const payloadTypeRaw = String(command?.payload?.type ?? "string");
+    const payloadType =
+      payloadTypeRaw === "hex" ? "hex" : contact.protocol === "udp" && payloadTypeRaw === "json" ? "json" : "string";
+    resolved.payload = {
+      type: payloadType,
+      value: String(command?.payload?.value ?? "")
+    };
     return resolved;
   };
 

@@ -98,6 +98,21 @@ export function createRunnerController({
       if (byteLength > MAX_COMMAND_PAYLOAD_BYTES) {
         return `Payload exceeds ${MAX_COMMAND_PAYLOAD_BYTES} bytes`;
       }
+    } else if (command.payload.type === "json") {
+      if (contact.protocol !== "udp") {
+        return "JSON payload is supported only for UDP";
+      }
+      let normalized = "";
+      try {
+        const parsed = JSON.parse(payloadValue);
+        normalized = JSON.stringify(parsed);
+      } catch {
+        return "Invalid JSON payload";
+      }
+      const byteLength = new TextEncoder().encode(normalized).length;
+      if (byteLength > MAX_COMMAND_PAYLOAD_BYTES) {
+        return `Payload exceeds ${MAX_COMMAND_PAYLOAD_BYTES} bytes`;
+      }
     } else {
       const byteLength = new TextEncoder().encode(payloadValue).length;
       if (byteLength > MAX_COMMAND_PAYLOAD_BYTES) {

@@ -416,7 +416,17 @@ export function createEditorController({
       const payloadType = document.createElement("select");
       appendOption(payloadType, "string", "string");
       appendOption(payloadType, "hex", "hex");
-      payloadType.value = command.payload?.type ?? "string";
+      if (selectedContact?.protocol === "udp") {
+        appendOption(payloadType, "json", "json");
+      }
+      const nextTypeRaw = String(command.payload?.type ?? "string");
+      const nextType =
+        nextTypeRaw === "hex"
+          ? "hex"
+          : selectedContact?.protocol === "udp" && nextTypeRaw === "json"
+            ? "json"
+            : "string";
+      payloadType.value = nextType;
       payloadType.disabled = editorLocked;
       payloadType.addEventListener("change", () => {
         const btn = selectedButton();
@@ -426,14 +436,14 @@ export function createEditorController({
             type: "button.setCommandPayloadType",
             buttonId: btn.id,
             commandIndex,
-            payloadType: payloadType.value === "hex" ? "hex" : "string"
+            payloadType: payloadType.value === "hex" ? "hex" : payloadType.value === "json" ? "json" : "string"
           },
           { render: false, historyGroup: `cmd-payload-type-${btn.id}-${commandIndex}` }
         );
       });
 
       const payloadValue = document.createElement("input");
-      payloadValue.placeholder = "Payload";
+      payloadValue.placeholder = nextType === "json" ? '{"key":"value"}' : "Payload";
       payloadValue.value = command.payload?.value ?? "";
       payloadValue.disabled = editorLocked;
       payloadValue.addEventListener("input", () => {

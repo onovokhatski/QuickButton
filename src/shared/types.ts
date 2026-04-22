@@ -1,7 +1,7 @@
 export type AppMode = "edit" | "use";
 
 export type Protocol = "udp" | "tcp" | "osc-udp";
-export type PayloadType = "string" | "hex";
+export type PayloadType = "string" | "hex" | "json";
 export type CommandErrorPolicy = "stop" | "continue";
 export type OscArgType = "int" | "float" | "string" | "bool";
 

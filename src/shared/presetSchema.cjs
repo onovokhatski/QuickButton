@@ -188,6 +188,13 @@ function sanitizeCommand(rawCommand) {
   }
 
   const normalizedProtocol = protocol === "tcp" ? "tcp" : "udp";
+  const rawPayloadType = rawCommand?.payload?.type;
+  const payloadType =
+    rawPayloadType === "hex"
+      ? "hex"
+      : normalizedProtocol === "udp" && rawPayloadType === "json"
+        ? "json"
+        : "string";
   const command = {
     kind: "command",
     protocol: normalizedProtocol,
@@ -195,7 +202,7 @@ function sanitizeCommand(rawCommand) {
     enabled: rawCommand?.enabled !== false,
     isCollapsed,
     payload: {
-      type: rawCommand?.payload?.type === "hex" ? "hex" : "string",
+      type: payloadType,
       value: String(rawCommand?.payload?.value ?? "")
     }
   };
@@ -361,6 +368,14 @@ function validateCommand(command) {
     if (!command.osc?.address) return "OSC address is required";
   } else if (!command.payload?.value) {
     return "Payload value is required";
+  } else if (command.protocol === "tcp" && command.payload?.type === "json") {
+    return "JSON payload is supported only for UDP";
+  } else if (command.protocol === "udp" && command.payload?.type === "json") {
+    try {
+      JSON.parse(String(command.payload.value));
+    } catch {
+      return "Invalid JSON payload";
+    }
   }
   return null;
 }

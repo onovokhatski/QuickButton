@@ -47,7 +47,12 @@ export type AppCommand =
       argType: string;
       argValue: unknown;
     }
-  | { type: "button.setCommandPayloadType"; buttonId: string; commandIndex: number; payloadType: "string" | "hex" }
+  | {
+      type: "button.setCommandPayloadType";
+      buttonId: string;
+      commandIndex: number;
+      payloadType: "string" | "hex" | "json";
+    }
   | { type: "button.setCommandPayloadValue"; buttonId: string; commandIndex: number; value: string }
   | { type: "contacts.addContact"; contact: Record<string, unknown> }
   | {
@@ -883,6 +888,10 @@ export function applyAppCommand(rawState: unknown, command: AppCommand): void {
         delete cmd.payload;
       } else {
         cmd.payload = cmd.payload ?? { type: "string", value: "PING" };
+        const payload = cmd.payload as Record<string, unknown> | undefined;
+        if (payload && payload.type === "json") {
+          payload.type = "string";
+        }
         delete cmd.osc;
       }
       break;
@@ -929,7 +938,12 @@ export function applyAppCommand(rawState: unknown, command: AppCommand): void {
         typeof cmd.payload === "object" && cmd.payload !== null
           ? (cmd.payload as Record<string, unknown>)
           : { type: "string", value: "" };
-      payload.type = command.payloadType === "hex" ? "hex" : "string";
+      payload.type =
+        command.payloadType === "hex"
+          ? "hex"
+          : command.payloadType === "json"
+            ? "json"
+            : "string";
       cmd.payload = payload;
       break;
     }

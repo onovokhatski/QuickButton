@@ -15,7 +15,7 @@ export type CommandLike = {
   contactId?: string;
   isCollapsed?: boolean;
   target?: { host: string; port: number; persistent?: boolean; keepAliveMs?: number };
-  payload?: { type: "string" | "hex"; value: string };
+  payload?: { type: "string" | "hex" | "json"; value: string };
   osc?: { address: string; args: Array<{ type: string; value: unknown }> };
   retry?: { count?: number; jitterMs?: number };
 };

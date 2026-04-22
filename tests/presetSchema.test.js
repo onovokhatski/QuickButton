@@ -134,6 +134,22 @@ describe("sanitizeCommand", () => {
     expect(cmd.target).toBeUndefined();
   });
 
+  it("keeps json payload type for udp commands", () => {
+    const cmd = sanitizeCommand({
+      protocol: "udp",
+      payload: { type: "json", value: '{"ok":true}' }
+    });
+    expect(cmd.payload).toEqual({ type: "json", value: '{"ok":true}' });
+  });
+
+  it("downgrades json payload type to string for tcp commands", () => {
+    const cmd = sanitizeCommand({
+      protocol: "tcp",
+      payload: { type: "json", value: '{"ok":true}' }
+    });
+    expect(cmd.payload).toEqual({ type: "string", value: '{"ok":true}' });
+  });
+
   it("sanitizes delay command kind and range", () => {
     const cmd = sanitizeCommand({ kind: "delay", name: "Pause", delayMs: 999999 });
     expect(cmd.kind).toBe("delay");
@@ -204,6 +220,36 @@ describe("validateCommand", () => {
 
   it("rejects invalid delay command range", () => {
     expect(validateCommand({ kind: "delay", delayMs: -1 })).toMatch(/delay/i);
+  });
+
+  it("accepts valid udp json payload", () => {
+    expect(
+      validateCommand({
+        protocol: "udp",
+        target: { host: "1.1.1.1", port: 7000 },
+        payload: { type: "json", value: '{"cmd":"ping"}' }
+      })
+    ).toBeNull();
+  });
+
+  it("rejects invalid udp json payload", () => {
+    expect(
+      validateCommand({
+        protocol: "udp",
+        target: { host: "1.1.1.1", port: 7000 },
+        payload: { type: "json", value: '{"cmd":' }
+      })
+    ).toMatch(/json/i);
+  });
+
+  it("rejects json payload for tcp", () => {
+    expect(
+      validateCommand({
+        protocol: "tcp",
+        target: { host: "1.1.1.1", port: 7000 },
+        payload: { type: "json", value: '{"cmd":"ping"}' }
+      })
+    ).toMatch(/only for udp/i);
   });
 });
 

@@ -130,13 +130,29 @@ function normalizeHexInput(input) {
   return Buffer.from(compact, "hex");
 }
 
-function commandToBuffer(command) {
+function normalizeJsonInput(input) {
+  try {
+    const parsed = JSON.parse(String(input));
+    return JSON.stringify(parsed);
+  } catch {
+    throw new Error("Invalid JSON payload");
+  }
+}
+
+function commandToBuffer(command, protocol) {
   if (!command?.payload?.value) {
     throw new Error("Payload is required");
   }
-  const payload = command.payload.type === "hex"
-    ? normalizeHexInput(command.payload.value)
-    : Buffer.from(command.payload.value, "utf8");
+  const payloadType = command?.payload?.type;
+  if (payloadType === "json" && protocol !== "udp") {
+    throw new Error("JSON payload is supported only for UDP");
+  }
+  const payload =
+    payloadType === "hex"
+      ? normalizeHexInput(command.payload.value)
+      : payloadType === "json"
+        ? Buffer.from(normalizeJsonInput(command.payload.value), "utf8")
+        : Buffer.from(command.payload.value, "utf8");
   assertPayloadSize(payload);
   return payload;
 }
@@ -409,12 +425,12 @@ async function executeCommand(command) {
 
   if (command.protocol === "udp") {
     await runWithRetry(async () => {
-      await sendUdp(command.target.host, command.target.port, commandToBuffer(command));
+      await sendUdp(command.target.host, command.target.port, commandToBuffer(command, "udp"));
     }, retry);
     return;
   }
   if (command.protocol === "tcp") {
-    await sendTcpWithPool(command.target.host, command.target.port, commandToBuffer(command), {
+    await sendTcpWithPool(command.target.host, command.target.port, commandToBuffer(command, "tcp"), {
       persistent: Boolean(command?.target?.persistent),
       keepAliveMs: Number(command?.target?.keepAliveMs) || DEFAULT_TCP_KEEP_ALIVE_MS
     });
@@ -950,7 +966,7 @@ function summarizePresetForDiagnostics(preset) {
   const contacts = Array.isArray(preset?.contacts) ? preset.contacts : [];
   let commandCount = 0;
   const protocols = { udp: 0, tcp: 0, "osc-udp": 0, other: 0 };
-  const payloadTypes = { string: 0, hex: 0, other: 0 };
+  const payloadTypes = { string: 0, hex: 0, json: 0, other: 0 };
   for (const button of buttons) {
     const commands = Array.isArray(button?.commands) ? button.commands : [];
     commandCount += commands.length;
@@ -960,7 +976,9 @@ function summarizePresetForDiagnostics(preset) {
       else protocols.other += 1;
       if (protocol === "osc-udp") continue;
       const payloadType = command?.payload?.type;
-      if (payloadType === "string" || payloadType === "hex") payloadTypes[payloadType] += 1;
+      if (payloadType === "string" || payloadType === "hex" || payloadType === "json") {
+        payloadTypes[payloadType] += 1;
+      }
       else payloadTypes.other += 1;
     }
   }

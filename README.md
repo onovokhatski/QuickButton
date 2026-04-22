@@ -36,8 +36,10 @@ Then click `Save`.
 In `Button editor`:
 
 - choose the Connection for the command;
-- for `udp/tcp` set payload (`string` or `hex`);
-- for `osc-udp` set OSC address and argument(s).
+- for `udp` set payload (`string`, `hex`, or `json`);
+- for `tcp` set payload (`string` or `hex`);
+- for `osc-udp` set OSC address and argument(s);
+- optionally add `Delay` steps between commands.
 
 ### 5) Test and run
 
@@ -74,15 +76,19 @@ QuickButton helps when you repeatedly send the same network actions:
   - font size
   - corner radius
   - text wrap
-  - background image/icon with darken amount
+  - text alignment (horizontal + vertical)
+  - background image/icon
   - label visibility (`always`, `hover`, `never`)
 
 ### Command Chains
 
 - A button can contain multiple commands.
+- Delay steps are supported inside the chain.
 - Command order is editable (drag and reorder).
+- Commands can be enabled/disabled and collapsed.
 - Per-command test send.
 - Validation before execution.
+- JSON payload type is available for UDP commands (validated before send).
 
 ### Connections (Endpoint Profiles)
 
@@ -94,6 +100,12 @@ QuickButton helps when you repeatedly send the same network actions:
 
 - `Edit` mode: configure layout, buttons, and commands.
 - `Use` mode: run actions quickly with minimal UI noise.
+
+### Web Mode / Remote Triggering
+
+- Built-in HTTP server can mirror the current grid in a browser (`Web` tab).
+- Configure port and enable/disable web mode from the app UI.
+- Run configured button chains from phone/tablet/another machine in the same network.
 
 ### Undo/Redo and History
 
@@ -124,6 +136,7 @@ If no file path exists yet (you never used `Save As`), autosave is skipped.
   - add a button;
   - test send.
 - Keyboard shortcut overlay (`F1` / `?`).
+- Visible help button (`?`) in the top panel opens shortcuts overlay.
 
 ### Diagnostics and Support
 
@@ -168,7 +181,7 @@ From `Help` menu:
 - `Cmd/Ctrl + G` - Toggle service cell visibility
 - `1...9` (in Use mode) - Run buttons by grid order
 - `Esc` - Return from Use to Edit
-- `F1` or `?` - Open shortcuts overlay
+- `F1`, `?` (`Shift + /`), or `Cmd/Ctrl + /` - Open shortcuts overlay
 
 ---
 
@@ -176,6 +189,8 @@ From `Help` menu:
 
 - Install dependencies: `npm install`
 - Start app: `npm start`
+- Build macOS release: `npm run dist:mac`
+- Build Windows release: `npm run dist:win`
 - Unit/integration tests: `npm test`
 - E2E tests: `npm run test:e2e`
 - Typecheck: `npm run typecheck`
