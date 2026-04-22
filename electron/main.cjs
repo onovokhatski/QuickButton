@@ -2,6 +2,8 @@ const path = require("node:path");
 const fs = require("node:fs/promises");
 const dgram = require("node:dgram");
 const net = require("node:net");
+const http = require("node:http");
+const os = require("node:os");
 const { execFileSync } = require("node:child_process");
 const { randomUUID } = require("node:crypto");
 const {
@@ -66,6 +68,18 @@ const runtimeStats = {
     stepsFailed: 0
   }
 };
+let webPresetState = createDefaultPreset();
+let webServerInstance = null;
+let webServerStatus = {
+  enabled: false,
+  running: false,
+  host: "127.0.0.1",
+  port: 3210,
+  url: "http://127.0.0.1:3210",
+  error: ""
+};
+const WEB_RUN_RATE_LIMIT_MS = 200;
+const webRunRateLimit = new Map();
 
 function formatBytes(bytes) {
   if (!Number.isFinite(bytes) || bytes < 0) return "0 B";
@@ -416,6 +430,441 @@ async function executeCommand(command) {
   }
 
   throw new Error(`Unsupported protocol: ${command.protocol}`);
+}
+
+function normalizeWebServerConfig(raw) {
+  const port = Number(raw?.port);
+  const safePort = Number.isInteger(port) && port >= 1 && port <= 65535 ? port : 3210;
+  return {
+    enabled: Boolean(raw?.enabled),
+    host: "0.0.0.0",
+    port: safePort
+  };
+}
+
+function detectPrimaryIpv4Address() {
+  try {
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+      const rows = Array.isArray(interfaces[name]) ? interfaces[name] : [];
+      for (const row of rows) {
+        if (!row || row.family !== "IPv4" || row.internal) continue;
+        if (typeof row.address === "string" && row.address.trim()) {
+          return row.address;
+        }
+      }
+    }
+  } catch {}
+  return "127.0.0.1";
+}
+
+function getWebServerStatus() {
+  return {
+    ...webServerStatus,
+    error: webServerStatus.error || undefined
+  };
+}
+
+function normalizeWebButtonId(raw) {
+  const value = String(raw ?? "");
+  if (!/^[a-zA-Z0-9._-]{1,120}$/.test(value)) {
+    throw new Error("Invalid button id");
+  }
+  return value;
+}
+
+function checkWebRunRateLimit(key) {
+  const now = Date.now();
+  const last = Number(webRunRateLimit.get(key) || 0);
+  if (now - last < WEB_RUN_RATE_LIMIT_MS) {
+    return false;
+  }
+  webRunRateLimit.set(key, now);
+  if (webRunRateLimit.size > 1000) {
+    for (const [entryKey, ts] of webRunRateLimit.entries()) {
+      if (now - Number(ts) > 30000) {
+        webRunRateLimit.delete(entryKey);
+      }
+    }
+  }
+  return true;
+}
+
+function webStateSnapshot() {
+  const preset = webPresetState && typeof webPresetState === "object" ? webPresetState : createDefaultPreset();
+  const ui = preset.ui ?? {};
+  const size = ui.buttonSize ?? { w: 72, h: 72 };
+  const grid = ui.grid ?? { cols: 4, rows: 3 };
+  const cols = Math.max(1, Number(grid.cols) || 4);
+  const rows = Math.max(1, Number(grid.rows) || 3);
+  const service = ui.service ?? {};
+  const serviceVisible = typeof service.showInGrid === "boolean" ? service.showInGrid : true;
+  const serviceCol = Math.max(0, Math.min(cols - 1, Number(service.col) || 0));
+  const serviceRow = Math.max(0, Math.min(rows - 1, Number(service.row) || 0));
+  const occupied = new Set();
+  const buttons = [];
+  const sourceButtons = Array.isArray(preset.buttons) ? preset.buttons : [];
+  for (const btn of sourceButtons) {
+    const col = Number(btn?.position?.col);
+    const row = Number(btn?.position?.row);
+    if (!Number.isInteger(col) || !Number.isInteger(row)) continue;
+    if (col < 0 || row < 0 || col >= cols || row >= rows) continue;
+    if (serviceVisible && col === serviceCol && row === serviceRow) continue;
+    const key = `${col}:${row}`;
+    if (occupied.has(key)) continue;
+    occupied.add(key);
+    buttons.push({
+      id: String(btn.id ?? ""),
+      label: String(btn.label ?? ""),
+      position: { col, row },
+      style: {
+        bgColor: String(btn?.style?.bgColor ?? "#252525"),
+        bgOpacity: Number(btn?.style?.bgOpacity ?? 100),
+        borderColor: String(btn?.style?.borderColor ?? "#2f2f2f"),
+        textColor: String(btn?.style?.textColor ?? "#ffffff"),
+        fontSize: Number(btn?.style?.fontSize ?? 13),
+        radius: Number(btn?.style?.radius ?? 8),
+        wrapLabel: Boolean(btn?.style?.wrapLabel),
+        labelVisibility:
+          btn?.style?.labelVisibility === "hover" || btn?.style?.labelVisibility === "never"
+            ? btn.style.labelVisibility
+            : "always",
+        iconAssetId:
+          typeof btn?.style?.iconAssetId === "string" && assetRegistry.isValidAssetId(btn.style.iconAssetId)
+            ? btn.style.iconAssetId
+            : "",
+        textAlignX:
+          btn?.style?.textAlignX === "left" || btn?.style?.textAlignX === "right" ? btn.style.textAlignX : "center",
+        textAlignY:
+          btn?.style?.textAlignY === "top" || btn?.style?.textAlignY === "bottom" ? btn.style.textAlignY : "middle"
+      }
+    });
+  }
+  return {
+    settings: {
+      buttonSize: {
+        w: Number(size.w) || 72,
+        h: Number(size.h) || 72
+      },
+      grid: {
+        cols,
+        rows
+      }
+    },
+    buttons
+  };
+}
+
+function webPageHtml() {
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>QuickButton Web</title>
+    <style>
+      :root { color-scheme: dark; }
+      body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #111; color: #eee; }
+      .wrap { padding: 14px; }
+      .title { font-size: 13px; color: #aaa; margin-bottom: 10px; }
+      .grid { display: grid; gap: 8px; }
+      .cell { display: flex; align-items: center; justify-content: center; }
+      .btn { border: 1px solid #2f2f2f; border-radius: 8px; cursor: pointer; color: #fff; font-weight: 500; width: 100%; height: 100%; box-sizing: border-box; display: flex; align-items: center; justify-content: center; line-height: 1.15; padding: 6px 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .btn.wrap { white-space: normal; word-break: break-word; overflow-wrap: anywhere; text-overflow: clip; padding: 2px 4px; }
+      .btn.has-bg-icon { background-size: cover; background-position: center; background-repeat: no-repeat; text-shadow: 0 1px 2px rgba(0,0,0,.85), 0 0 1px rgba(0,0,0,.6); }
+      .btn-label { display: inline-block; }
+      .btn.label-never .btn-label { opacity: 0; }
+      .btn.label-hover .btn-label { opacity: 0; transition: opacity 120ms ease; }
+      .btn.label-hover:hover .btn-label, .btn.label-hover:focus-visible .btn-label { opacity: 1; }
+      .btn:active { transform: scale(0.99); }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="title">QuickButton web mode (run only)</div>
+      <div id="grid" class="grid"></div>
+    </div>
+    <script>
+      const grid = document.getElementById("grid");
+      const alignXMap = { left: "flex-start", center: "center", right: "flex-end" };
+      const alignYMap = { top: "flex-start", middle: "center", bottom: "flex-end" };
+      async function loadState() {
+        const response = await fetch("/api/state", { cache: "no-store" });
+        const state = await response.json();
+        const cols = Math.max(1, Number(state?.settings?.grid?.cols) || 4);
+        const bw = Math.max(16, Number(state?.settings?.buttonSize?.w) || 72);
+        const bh = Math.max(16, Number(state?.settings?.buttonSize?.h) || 72);
+        grid.style.gridTemplateColumns = "repeat(" + cols + ", " + bw + "px)";
+        grid.innerHTML = "";
+        const buttons = Array.isArray(state?.buttons) ? state.buttons : [];
+        buttons
+          .sort((a, b) => (a.position.row - b.position.row) || (a.position.col - b.position.col))
+          .forEach((btn) => {
+            const cell = document.createElement("div");
+            cell.className = "cell";
+            cell.style.width = bw + "px";
+            cell.style.height = bh + "px";
+            const el = document.createElement("button");
+            el.className = "btn";
+            if (btn?.style?.labelVisibility === "hover") el.classList.add("label-hover");
+            if (btn?.style?.labelVisibility === "never") el.classList.add("label-never");
+            if (btn?.style?.wrapLabel) el.classList.add("wrap");
+            const labelEl = document.createElement("span");
+            labelEl.className = "btn-label";
+            labelEl.textContent = btn.label || "Button";
+            el.appendChild(labelEl);
+            const bgTransparent = Number(btn?.style?.bgOpacity ?? 100) <= 0;
+            el.style.backgroundColor = bgTransparent ? "transparent" : (btn?.style?.bgColor || "#252525");
+            if (btn?.style?.iconAssetId) {
+              el.classList.add("has-bg-icon");
+              el.style.backgroundImage = "url('/api/assets/" + encodeURIComponent(btn.style.iconAssetId) + "')";
+              el.style.backgroundSize = "cover";
+              el.style.backgroundPosition = "center";
+              el.style.backgroundRepeat = "no-repeat";
+            } else {
+              el.classList.remove("has-bg-icon");
+              el.style.backgroundImage = "";
+            }
+            el.style.borderColor = btn?.style?.borderColor || "#2f2f2f";
+            el.style.color = btn?.style?.textColor || "#fff";
+            el.style.fontSize = (Number(btn?.style?.fontSize) || 13) + "px";
+            el.style.borderRadius = (Number(btn?.style?.radius) || 8) + "px";
+            el.style.justifyContent = alignXMap[btn?.style?.textAlignX] || "center";
+            el.style.alignItems = alignYMap[btn?.style?.textAlignY] || "center";
+            el.style.textAlign = btn?.style?.textAlignX || "center";
+            el.addEventListener("click", async () => {
+              await fetch("/api/run/" + encodeURIComponent(btn.id), { method: "POST" });
+            });
+            cell.appendChild(el);
+            grid.appendChild(cell);
+          });
+      }
+      loadState();
+      setInterval(loadState, 2000);
+    </script>
+  </body>
+</html>`;
+}
+
+function webJson(res, statusCode, data) {
+  res.statusCode = statusCode;
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  res.end(JSON.stringify(data));
+}
+
+async function executeChainPayload(payload) {
+  runtimeStats.chain.total += 1;
+  const chain = Array.isArray(payload.chain) ? payload.chain.slice(0, MAX_COMMANDS) : [];
+  const steps = [];
+  for (let index = 0; index < chain.length; index += 1) {
+    const command = chain[index];
+    let result;
+    try {
+      if (command?.kind === "delay") {
+        const delayMs = Math.max(0, Math.min(120000, Math.trunc(Number(command.delayMs) || 0)));
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+        result = { ok: true };
+        log.info(`chain[${index}] delay ${delayMs}ms`);
+        steps.push({ index, ...result });
+        continue;
+      }
+      await executeCommand(command);
+      result = { ok: true };
+      log.info(`chain[${index}] ok`, command?.protocol, command?.target?.host, command?.target?.port);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown chain step error";
+      result = { ok: false, code: error?.code, message };
+      log.error(`chain[${index}] failed:`, command?.protocol, command?.target?.host, command?.target?.port, message);
+    }
+    steps.push({ index, ...result });
+    if (!result.ok && payload.onError === "stop") break;
+  }
+  const ok = steps.every((step) => step.ok);
+  const okSteps = steps.filter((step) => step.ok).length;
+  runtimeStats.chain.stepsTotal += steps.length;
+  runtimeStats.chain.stepsOk += okSteps;
+  runtimeStats.chain.stepsFailed += steps.length - okSteps;
+  if (ok) runtimeStats.chain.ok += 1;
+  else runtimeStats.chain.failed += 1;
+  return { ok, steps };
+}
+
+function resolveWebCommandChain(buttonId) {
+  const preset = webPresetState;
+  const buttons = Array.isArray(preset?.buttons) ? preset.buttons : [];
+  const btn = buttons.find((item) => String(item?.id) === String(buttonId));
+  if (!btn) {
+    throw new Error("Button not found");
+  }
+  const contacts = Array.isArray(preset?.contacts) ? preset.contacts : [];
+  const chain = [];
+  const onError = preset?.settings?.onCommandError === "continue" ? "continue" : "stop";
+  for (const command of Array.isArray(btn.commands) ? btn.commands : []) {
+    if (command?.enabled === false) continue;
+    if (command?.kind === "delay") {
+      chain.push({
+        kind: "delay",
+        delayMs: Math.max(0, Math.min(120000, Math.trunc(Number(command.delayMs) || 0)))
+      });
+      continue;
+    }
+    const contact = contacts.find((item) => String(item?.id) === String(command?.contactId ?? ""));
+    if (!contact) continue;
+    const resolved = {
+      protocol: contact.protocol,
+      target: {
+        host: String(contact?.target?.host ?? ""),
+        port: Number(contact?.target?.port),
+        persistent: Boolean(contact?.target?.persistent),
+        keepAliveMs: Number(contact?.target?.keepAliveMs) || undefined
+      }
+    };
+    if (contact.protocol === "osc-udp") {
+      resolved.osc = command?.osc ?? { address: "/ping", args: [] };
+    } else {
+      resolved.payload = command?.payload ?? { type: "string", value: "" };
+    }
+    chain.push(resolved);
+  }
+  return { chain, onError };
+}
+
+function stopWebServer() {
+  if (!webServerInstance) {
+    webServerStatus.running = false;
+    return Promise.resolve();
+  }
+  const active = webServerInstance;
+  webServerInstance = null;
+  return new Promise((resolve) => {
+    active.close(() => resolve());
+  });
+}
+
+async function startWebServer(config) {
+  await stopWebServer();
+  const host = "0.0.0.0";
+  const port = Number(config.port) || 3210;
+  const displayHost = detectPrimaryIpv4Address();
+  const server = http.createServer(async (req, res) => {
+    try {
+      const requestUrl = new URL(req.url || "/", `http://${host}:${port}`);
+      if (req.method === "GET" && requestUrl.pathname === "/") {
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
+        res.setHeader("Cache-Control", "no-store");
+        res.end(webPageHtml());
+        return;
+      }
+      if (req.method === "GET" && requestUrl.pathname === "/api/state") {
+        webJson(res, 200, webStateSnapshot());
+        return;
+      }
+      if (req.method === "GET" && requestUrl.pathname.startsWith("/api/assets/")) {
+        const assetId = decodeURIComponent(requestUrl.pathname.slice("/api/assets/".length));
+        if (!assetRegistry.isValidAssetId(assetId)) {
+          webJson(res, 400, { ok: false, message: "Invalid asset id" });
+          return;
+        }
+        const resolved = assetRegistry.resolve(assetId);
+        if (!resolved) {
+          webJson(res, 404, { ok: false, message: "Asset not found" });
+          return;
+        }
+        const bytes = await fs.readFile(resolved.storedPath);
+        res.statusCode = 200;
+        res.setHeader("Content-Type", assetRegistry.mimeForExt(path.extname(resolved.storedPath)));
+        res.setHeader("Cache-Control", "public, max-age=3600");
+        res.end(bytes);
+        return;
+      }
+      if (req.method === "POST" && requestUrl.pathname.startsWith("/api/run/")) {
+        if (requestUrl.pathname.length <= "/api/run/".length) {
+          webJson(res, 400, { ok: false, message: "Button id is required" });
+          return;
+        }
+        const buttonId = normalizeWebButtonId(
+          decodeURIComponent(requestUrl.pathname.slice("/api/run/".length))
+        );
+        const remoteAddress = String(req.socket?.remoteAddress || "local");
+        const rateKey = `${remoteAddress}:${buttonId}`;
+        if (!checkWebRunRateLimit(rateKey)) {
+          webJson(res, 429, { ok: false, message: "Too many requests" });
+          return;
+        }
+        const payload = resolveWebCommandChain(buttonId);
+        if (!payload.chain.length) {
+          webJson(res, 400, { ok: false, message: "No active commands configured" });
+          return;
+        }
+        const result = await executeChainPayload(payload);
+        webJson(res, result.ok ? 200 : 500, result);
+        return;
+      }
+      webJson(res, 404, { ok: false, message: "Not found" });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown web server error";
+      webJson(res, 500, { ok: false, message });
+    }
+  });
+  await new Promise((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(port, host, () => {
+      server.off("error", reject);
+      resolve();
+    });
+  });
+  webServerInstance = server;
+  webServerStatus = {
+    ...webServerStatus,
+    enabled: true,
+    running: true,
+    host,
+    port,
+    url: `http://${displayHost}:${port}`,
+    error: ""
+  };
+}
+
+async function applyWebServerConfig(config) {
+  const normalized = normalizeWebServerConfig(config);
+  const sameBinding =
+    webServerStatus.running &&
+    webServerStatus.enabled &&
+    webServerStatus.host === normalized.host &&
+    webServerStatus.port === normalized.port;
+  webServerStatus = {
+    ...webServerStatus,
+    enabled: normalized.enabled,
+    host: normalized.host,
+    port: normalized.port,
+    url: `http://${detectPrimaryIpv4Address()}:${normalized.port}`
+  };
+  if (!normalized.enabled) {
+    await stopWebServer();
+    webServerStatus.running = false;
+    webServerStatus.error = "";
+    return getWebServerStatus();
+  }
+  if (sameBinding) {
+    webServerStatus.error = "";
+    return getWebServerStatus();
+  }
+  try {
+    await startWebServer(normalized);
+    return getWebServerStatus();
+  } catch (error) {
+    await stopWebServer();
+    webServerStatus.running = false;
+    webServerStatus.error = error instanceof Error ? error.message : String(error);
+    return getWebServerStatus();
+  }
+}
+
+async function setWebPresetState(rawPreset) {
+  const sanitized = sanitizePreset(rawPreset);
+  webPresetState = sanitized;
+  return applyWebServerConfig(sanitized?.ui?.webServer ?? {});
 }
 
 function lastUsedFilePath() {
@@ -856,6 +1305,30 @@ function registerIpc() {
     if (item) item.checked = payload.value;
   });
 
+  ipcMain.removeHandler(channels.webServerGetStatus);
+  ipcMain.handle(channels.webServerGetStatus, async () => getWebServerStatus());
+
+  defineIpc(channels.webServerOpen, async (_event, payload) => {
+    await shell.openExternal(payload.url);
+    return { ok: true };
+  });
+
+  defineIpc(channels.webServerRestart, async (_event, payload) => {
+    const sanitized = sanitizePreset(payload.preset);
+    webPresetState = sanitized;
+    const config = normalizeWebServerConfig(sanitized?.ui?.webServer ?? {});
+    if (!config.enabled) {
+      return applyWebServerConfig(config);
+    }
+    await stopWebServer();
+    webServerStatus.running = false;
+    return applyWebServerConfig(config);
+  });
+
+  defineIpc(channels.webServerSyncState, async (_event, payload) => {
+    return setWebPresetState(payload.preset);
+  });
+
   ipcMain.removeHandler(channels.runtimeTestSend);
   ipcMain.handle(channels.runtimeTestSend, async (_event, command) => {
     runtimeStats.testSend.total += 1;
@@ -879,57 +1352,14 @@ function registerIpc() {
   });
 
   defineIpc(channels.runtimeExecuteChain, async (_event, payload) => {
-    runtimeStats.chain.total += 1;
-    const chain = Array.isArray(payload.chain) ? payload.chain.slice(0, MAX_COMMANDS) : [];
-    const steps = [];
-    for (let index = 0; index < chain.length; index += 1) {
-      const command = chain[index];
-      let result;
-      try {
-        if (command?.kind === "delay") {
-          const delayMs = Math.max(0, Math.min(120000, Math.trunc(Number(command.delayMs) || 0)));
-          await new Promise((resolve) => setTimeout(resolve, delayMs));
-          result = { ok: true };
-          log.info(`chain[${index}] delay ${delayMs}ms`);
-          steps.push({ index, ...result });
-          continue;
-        }
-        await executeCommand(command);
-        result = { ok: true };
-        log.info(
-          `chain[${index}] ok`,
-          command?.protocol,
-          command?.target?.host,
-          command?.target?.port
-        );
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "Unknown chain step error";
-        result = { ok: false, code: error?.code, message };
-        log.error(
-          `chain[${index}] failed:`,
-          command?.protocol,
-          command?.target?.host,
-          command?.target?.port,
-          message
-        );
-      }
-      steps.push({ index, ...result });
-      if (!result.ok && payload.onError === "stop") break;
-    }
-    const ok = steps.every((step) => step.ok);
-    const okSteps = steps.filter((step) => step.ok).length;
-    runtimeStats.chain.stepsTotal += steps.length;
-    runtimeStats.chain.stepsOk += okSteps;
-    runtimeStats.chain.stepsFailed += steps.length - okSteps;
-    if (ok) runtimeStats.chain.ok += 1;
-    else runtimeStats.chain.failed += 1;
-    return { ok, steps };
+    return executeChainPayload(payload);
   });
 
   ipcMain.removeHandler(channels.presetOpen);
   ipcMain.handle(channels.presetOpen, async () => {
     try {
       const preset = await openPresetFromDisk();
+      await setWebPresetState(preset);
       log.info("preset opened");
       return preset;
     } catch (err) {
@@ -941,6 +1371,7 @@ function registerIpc() {
   ipcMain.removeHandler(channels.presetSave);
   ipcMain.handle(channels.presetSave, async (_event, payload) => {
     try {
+      await setWebPresetState(payload.preset);
       const result = await savePresetToDisk(payload);
       await saveLastUsedPresetPath(result.path);
       log.info("preset saved:", result.path);
@@ -953,6 +1384,7 @@ function registerIpc() {
 
   ipcMain.removeHandler(channels.presetSaveAs);
   ipcMain.handle(channels.presetSaveAs, async (_event, payload) => {
+    await setWebPresetState(payload.preset);
     const result = await savePresetToDisk({ preset: payload.preset });
     await saveLastUsedPresetPath(result.path);
     return result;
@@ -962,16 +1394,22 @@ function registerIpc() {
   ipcMain.handle(channels.presetLoadLast, async () => {
     const { path: presetPath, recoveredFromBackup } = await loadLastUsedPresetPath();
     if (!presetPath) {
-      return { preset: createDefaultPreset(), path: null, recoveredFromBackup: false };
+      const preset = createDefaultPreset();
+      await setWebPresetState(preset);
+      return { preset, path: null, recoveredFromBackup: false };
     }
     try {
+      const preset = sanitizePreset(await openPresetFromDisk(presetPath));
+      await setWebPresetState(preset);
       return {
-        preset: sanitizePreset(await openPresetFromDisk(presetPath)),
+        preset,
         path: presetPath,
         recoveredFromBackup
       };
     } catch {
-      return { preset: createDefaultPreset(), path: null, recoveredFromBackup: false };
+      const preset = createDefaultPreset();
+      await setWebPresetState(preset);
+      return { preset, path: null, recoveredFromBackup: false };
     }
   });
 }
@@ -1362,9 +1800,11 @@ app.on("activate", () => {
 
 app.on("before-quit", () => {
   disposeTcpPool();
+  void stopWebServer();
 });
 
 app.on("window-all-closed", () => {
   disposeTcpPool();
+  void stopWebServer();
   if (process.platform !== "darwin") app.quit();
 });

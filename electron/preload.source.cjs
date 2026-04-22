@@ -12,6 +12,12 @@ const api = {
     testSend: (payload) => ipcRenderer.invoke(CHANNELS.runtimeTestSend, payload),
     executeChain: (payload) => ipcRenderer.invoke(CHANNELS.runtimeExecuteChain, payload)
   },
+  webServer: {
+    getStatus: () => ipcRenderer.invoke(CHANNELS.webServerGetStatus),
+    open: (payload) => ipcRenderer.invoke(CHANNELS.webServerOpen, payload),
+    restart: (payload) => ipcRenderer.invoke(CHANNELS.webServerRestart, payload),
+    syncState: (payload) => ipcRenderer.invoke(CHANNELS.webServerSyncState, payload)
+  },
   window: {
     minimize: () => ipcRenderer.invoke(CHANNELS.windowMinimize),
     close: () => ipcRenderer.invoke(CHANNELS.windowClose),

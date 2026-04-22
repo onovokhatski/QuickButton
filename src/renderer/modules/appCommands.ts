@@ -72,6 +72,8 @@ export type AppCommand =
   | { type: "preset.setClickThroughBackground"; value: boolean }
   | { type: "preset.setGridBgColor"; color: string }
   | { type: "preset.setGridBgOpacityPercent"; opacityPercent: number }
+  | { type: "preset.setWebServerEnabled"; value: boolean }
+  | { type: "preset.setWebServerPort"; port: number }
   | { type: "service.setPosition"; col: number; row: number }
   | { type: "service.setShowInGrid"; value: boolean }
   | { type: "service.setRadius"; radius: number };
@@ -92,6 +94,7 @@ type AppState = {
       buttonSize?: { w?: number; h?: number };
       gridBackground?: { color?: string; opacity?: number };
       service?: { col?: number; row?: number; radius?: number; showInGrid?: boolean };
+      webServer?: { enabled?: boolean; host?: string; port?: number };
       clickThroughBackground?: boolean;
       alwaysOnTop?: boolean;
     };
@@ -555,6 +558,14 @@ export function deriveCommandHistoryDelta(
         forward: [command],
         backward: [{ type: "preset.setGridBgOpacityPercent", opacityPercent: old }]
       };
+    }
+    case "preset.setWebServerEnabled": {
+      const old = Boolean(state.preset.ui?.webServer?.enabled ?? false);
+      return { forward: [command], backward: [{ type: "preset.setWebServerEnabled", value: old }] };
+    }
+    case "preset.setWebServerPort": {
+      const old = Number(state.preset.ui?.webServer?.port ?? 3210);
+      return { forward: [command], backward: [{ type: "preset.setWebServerPort", port: old }] };
     }
     case "service.setShowInGrid": {
       const old = Boolean(state.preset.ui?.service?.showInGrid ?? true);
@@ -1033,6 +1044,24 @@ export function applyAppCommand(rawState: unknown, command: AppCommand): void {
       }
       const percent = Math.max(0, Math.min(100, Number(command.opacityPercent) || 0));
       ui.gridBackground.opacity = percent / 100;
+      break;
+    }
+    case "preset.setWebServerEnabled": {
+      const ui = ensurePresetUi(state);
+      if (!ui.webServer || typeof ui.webServer !== "object") {
+        ui.webServer = { enabled: false, host: "127.0.0.1", port: 3210 };
+      }
+      ui.webServer.enabled = Boolean(command.value);
+      ui.webServer.host = "127.0.0.1";
+      break;
+    }
+    case "preset.setWebServerPort": {
+      const ui = ensurePresetUi(state);
+      if (!ui.webServer || typeof ui.webServer !== "object") {
+        ui.webServer = { enabled: false, host: "127.0.0.1", port: 3210 };
+      }
+      ui.webServer.port = Math.max(1, Math.min(65535, Number(command.port) || 3210));
+      ui.webServer.host = "127.0.0.1";
       break;
     }
     case "service.setShowInGrid": {

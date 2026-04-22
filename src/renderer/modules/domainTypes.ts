@@ -1,4 +1,4 @@
-export type RightTab = "button" | "grid" | "connections";
+export type RightTab = "button" | "grid" | "connections" | "web";
 export type SelectionTarget = "button" | "service" | null;
 export type LabelVisibility = "always" | "hover" | "never";
 export type TextAlignX = "left" | "center" | "right";
@@ -61,6 +61,7 @@ export type PresetLike = {
     grid: { cols: number; rows: number };
     gridBackground?: { color?: string; opacity?: number };
     service?: { showInGrid?: boolean; radius?: number };
+    webServer?: { enabled?: boolean; host?: string; port?: number };
   };
   settings: { onCommandError: CommandErrorPolicy; toastEnabled?: boolean };
   buttons: ButtonLike[];

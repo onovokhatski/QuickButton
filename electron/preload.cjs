@@ -15,6 +15,10 @@ var require_ipc = __commonJS({
       presetLoadLast: "preset:loadLast",
       runtimeTestSend: "runtime:testSend",
       runtimeExecuteChain: "runtime:executeChain",
+      webServerGetStatus: "web-server:get-status",
+      webServerOpen: "web-server:open",
+      webServerRestart: "web-server:restart",
+      webServerSyncState: "web-server:sync-state",
       windowMinimize: "window:minimize",
       windowClose: "window:close",
       windowStartDrag: "window:startDrag",
@@ -119,6 +123,15 @@ var require_ipc = __commonJS({
         chain: V.array({ maxLength: 50 }),
         onError: V.enumOf(["stop", "continue"], { optional: true, default: "stop" })
       }),
+      [CHANNELS2.webServerOpen]: V.object({
+        url: V.string({ maxLength: 1024 })
+      }),
+      [CHANNELS2.webServerRestart]: V.object({
+        preset: V.any()
+      }),
+      [CHANNELS2.webServerSyncState]: V.object({
+        preset: V.any()
+      }),
       [CHANNELS2.diagnosticsReportError]: V.object({
         sessionId: V.string({ maxLength: 64, optional: true, default: "" }),
         kind: V.enumOf(["error", "unhandledrejection"], { optional: true, default: "error" }),
@@ -158,6 +171,12 @@ var api = {
   runtime: {
     testSend: (payload) => ipcRenderer.invoke(CHANNELS.runtimeTestSend, payload),
     executeChain: (payload) => ipcRenderer.invoke(CHANNELS.runtimeExecuteChain, payload)
+  },
+  webServer: {
+    getStatus: () => ipcRenderer.invoke(CHANNELS.webServerGetStatus),
+    open: (payload) => ipcRenderer.invoke(CHANNELS.webServerOpen, payload),
+    restart: (payload) => ipcRenderer.invoke(CHANNELS.webServerRestart, payload),
+    syncState: (payload) => ipcRenderer.invoke(CHANNELS.webServerSyncState, payload)
   },
   window: {
     minimize: () => ipcRenderer.invoke(CHANNELS.windowMinimize),

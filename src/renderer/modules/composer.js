@@ -67,9 +67,17 @@ const {
   tabButtonSettingsEl,
   tabGridSettingsEl,
   tabConnectionsSettingsEl,
+  tabWebSettingsEl,
   panelButtonSettingsEl,
   panelGridSettingsEl,
   panelConnectionsSettingsEl,
+  panelWebSettingsEl,
+  webServerEnabledEl,
+  webServerPortEl,
+  webServerStatusEl,
+  webServerUrlEl,
+  webServerRestartEl,
+  webServerOpenEl,
   contactNameEl,
   contactProtocolEl,
   contactHostEl,
@@ -95,6 +103,7 @@ let runnerController = null;
 let windowSizingController = null;
 let historyController = null;
 let autoSaveController = null;
+let webSyncTimer = null;
 
 const state = createRendererState();
 const store = createRendererStore(state);
@@ -106,6 +115,17 @@ function markDirty() {
 function markClean() {
   state.ui.isDirty = false;
   ensureHistoryController().reset();
+}
+
+function scheduleWebServerSync() {
+  if (!state.preset) return;
+  if (webSyncTimer) {
+    clearTimeout(webSyncTimer);
+  }
+  webSyncTimer = setTimeout(() => {
+    webSyncTimer = null;
+    window.quickButtonApi?.webServer?.syncState?.({ preset: state.preset }).catch?.(() => {});
+  }, 120);
 }
 
 /** Plan-3 A1: все мутации preset через команды (постепенный перенос). */
@@ -142,6 +162,7 @@ function dispatch(command, options) {
   if (opts.render !== false) {
     render();
   }
+  scheduleWebServerSync();
   if (command.type === "preset.setMode" || command.type === "preset.toggleMode") {
     void ensureAutoSaveController().trigger("mode-switch", { force: true, silent: true });
   }
@@ -372,9 +393,11 @@ function ensureRenderController() {
       panelButtonSettingsEl,
       panelGridSettingsEl,
       panelConnectionsSettingsEl,
+      panelWebSettingsEl,
       tabButtonSettingsEl,
       tabGridSettingsEl,
       tabConnectionsSettingsEl,
+      tabWebSettingsEl,
       gridColsEl,
       gridRowsEl,
       btnSizeWEl,
@@ -406,7 +429,13 @@ function ensureRenderController() {
       noSelectionEl,
       editorFieldsEl,
       serviceEditorEl,
-      serviceRadiusEl
+      serviceRadiusEl,
+      webServerEnabledEl,
+      webServerPortEl,
+      webServerStatusEl,
+      webServerUrlEl,
+      webServerRestartEl,
+      webServerOpenEl
     }
   });
   return renderController;
@@ -496,6 +525,7 @@ function ensureEventsController() {
       tabButtonSettingsEl,
       tabGridSettingsEl,
       tabConnectionsSettingsEl,
+      tabWebSettingsEl,
       alwaysOnTopEl,
       gridColsEl,
       gridRowsEl,
@@ -524,7 +554,13 @@ function ensureEventsController() {
       btnIconPickEl,
       btnIconClearEl,
       btnLabelVisibilityEl,
-      serviceRadiusEl
+      serviceRadiusEl,
+      webServerEnabledEl,
+      webServerPortEl,
+      webServerStatusEl,
+      webServerUrlEl,
+      webServerRestartEl,
+      webServerOpenEl
     }
   });
   return eventsController;
@@ -657,6 +693,7 @@ function bindEvents() {
 
 async function init() {
   await ensureStartupController().init();
+  scheduleWebServerSync();
   ensureAutoSaveController().start();
 }
 

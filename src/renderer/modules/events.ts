@@ -31,6 +31,7 @@ type EventsDeps = {
     tabButtonSettingsEl: HTMLElement;
     tabGridSettingsEl: HTMLElement;
     tabConnectionsSettingsEl: HTMLElement;
+    tabWebSettingsEl: HTMLElement;
     alwaysOnTopEl: HTMLInputElement;
     gridColsEl: HTMLInputElement;
     gridRowsEl: HTMLInputElement;
@@ -60,6 +61,12 @@ type EventsDeps = {
     btnIconClearEl: HTMLElement;
     btnLabelVisibilityEl: HTMLInputElement | HTMLSelectElement;
     serviceRadiusEl: HTMLInputElement;
+    webServerEnabledEl: HTMLInputElement;
+    webServerPortEl: HTMLInputElement;
+    webServerStatusEl: HTMLElement;
+    webServerUrlEl: HTMLElement;
+    webServerRestartEl: HTMLButtonElement;
+    webServerOpenEl: HTMLButtonElement;
   };
 };
 
@@ -115,11 +122,43 @@ export function createEventsController({
     const tabs = [
       { key: "grid", el: els.tabGridSettingsEl },
       { key: "connections", el: els.tabConnectionsSettingsEl },
-      { key: "button", el: els.tabButtonSettingsEl }
+      { key: "button", el: els.tabButtonSettingsEl },
+      { key: "web", el: els.tabWebSettingsEl }
     ] as const;
-    const setActiveTab = (tabKey: "grid" | "connections" | "button"): void => {
+    const applyWebServerStatus = (status: {
+      enabled: boolean;
+      running: boolean;
+      url: string;
+      error?: string;
+    }): void => {
+      const label = status.running
+        ? `running on ${status.url}`
+        : status.error
+          ? `error: ${status.error}`
+          : "stopped";
+      els.webServerStatusEl.textContent = label;
+      els.webServerUrlEl.textContent = status.url || "-";
+      els.webServerOpenEl.disabled = !status.running;
+      els.webServerRestartEl.disabled = !status.enabled;
+    };
+    const refreshWebServerStatus = async (): Promise<void> => {
+      try {
+        const status = await window.quickButtonApi.webServer.getStatus();
+        applyWebServerStatus(status);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        els.webServerStatusEl.textContent = `error: ${message}`;
+        els.webServerUrlEl.textContent = "-";
+        els.webServerOpenEl.disabled = true;
+        els.webServerRestartEl.disabled = true;
+      }
+    };
+    const setActiveTab = (tabKey: "grid" | "connections" | "button" | "web"): void => {
       state.ui.activeRightTab = tabKey;
       render();
+      if (tabKey === "web") {
+        void refreshWebServerStatus();
+      }
     };
     const focusTabByIndex = (index: number): void => {
       tabs[(index + tabs.length) % tabs.length].el.focus();
@@ -155,6 +194,7 @@ export function createEventsController({
     });
 
     bindConnectionsEvents();
+    void refreshWebServerStatus();
 
     els.alwaysOnTopEl.addEventListener("change", async () => {
       if (!canEdit()) return;
@@ -371,6 +411,41 @@ export function createEventsController({
         type: "preset.setGridBgOpacityPercent",
         opacityPercent: Number(els.gridBgOpacityEl.value)
       }, { historyGroup: "grid-bg-opacity" });
+    });
+    els.webServerEnabledEl.addEventListener("change", async () => {
+      if (!canEdit()) return;
+      dispatch({
+        type: "preset.setWebServerEnabled",
+        value: els.webServerEnabledEl.checked
+      }, { historyGroup: "web-server-enabled" });
+      const status = await window.quickButtonApi.webServer.syncState({ preset: state.preset });
+      applyWebServerStatus(status);
+    });
+    els.webServerPortEl.addEventListener("change", async () => {
+      if (!canEdit()) return;
+      const nextPort = Math.max(1, Math.min(65535, Number(els.webServerPortEl.value) || 3210));
+      els.webServerPortEl.value = String(nextPort);
+      dispatch({
+        type: "preset.setWebServerPort",
+        port: nextPort
+      }, { historyGroup: "web-server-port" });
+      const status = await window.quickButtonApi.webServer.syncState({ preset: state.preset });
+      applyWebServerStatus(status);
+    });
+    els.webServerOpenEl.addEventListener("click", async () => {
+      const status = await window.quickButtonApi.webServer.getStatus();
+      if (!status.running) {
+        showToast("Web server is not running");
+        return;
+      }
+      await window.quickButtonApi.webServer.open({ url: status.url });
+    });
+    els.webServerRestartEl.addEventListener("click", async () => {
+      const status = await window.quickButtonApi.webServer.restart({ preset: state.preset });
+      applyWebServerStatus(status);
+      if (!status.running && status.error) {
+        showToast(`Web server restart failed: ${status.error}`);
+      }
     });
 
     els.btnLabelEl.addEventListener("input", () => {

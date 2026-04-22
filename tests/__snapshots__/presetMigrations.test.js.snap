@@ -6,7 +6,9 @@ exports[`preset migrations — fixtures > v0 fixture: sanitize produces stable s
     {
       "commands": [
         {
+          "enabled": true,
           "isCollapsed": false,
+          "kind": "command",
           "name": "",
           "payload": {
             "type": "string",
@@ -30,10 +32,13 @@ exports[`preset migrations — fixtures > v0 fixture: sanitize produces stable s
       "style": {
         "bgColor": "#202020",
         "bgOpacity": 100,
+        "borderColor": "#2f2f2f",
         "fontSize": 13,
         "iconDarken": 35,
         "labelVisibility": "always",
         "radius": 8,
+        "textAlignX": "center",
+        "textAlignY": "middle",
         "textColor": "#ffffff",
       },
     },
@@ -69,12 +74,17 @@ exports[`preset migrations — fixtures > v0 fixture: sanitize produces stable s
       "row": 0,
       "showInGrid": true,
     },
+    "webServer": {
+      "enabled": false,
+      "host": "127.0.0.1",
+      "port": 3210,
+    },
     "window": {
       "x": 80,
       "y": 80,
     },
   },
-  "version": 5,
+  "version": 6,
 }
 `;
 
@@ -84,7 +94,9 @@ exports[`preset migrations — fixtures > v1 fixture: sanitize produces stable s
     {
       "commands": [
         {
+          "enabled": true,
           "isCollapsed": false,
+          "kind": "command",
           "name": "",
           "osc": {
             "address": "/fire",
@@ -121,10 +133,13 @@ exports[`preset migrations — fixtures > v1 fixture: sanitize produces stable s
       "style": {
         "bgColor": "#8b0000",
         "bgOpacity": 100,
+        "borderColor": "#2f2f2f",
         "fontSize": 14,
         "iconDarken": 35,
         "labelVisibility": "always",
         "radius": 10,
+        "textAlignX": "center",
+        "textAlignY": "middle",
         "textColor": "#ffffff",
       },
     },
@@ -160,12 +175,17 @@ exports[`preset migrations — fixtures > v1 fixture: sanitize produces stable s
       "row": 0,
       "showInGrid": true,
     },
+    "webServer": {
+      "enabled": false,
+      "host": "127.0.0.1",
+      "port": 3210,
+    },
     "window": {
       "x": 80,
       "y": 80,
     },
   },
-  "version": 5,
+  "version": 6,
 }
 `;
 
@@ -176,7 +196,9 @@ exports[`preset migrations — fixtures > v2 fixture: sanitize produces stable s
       "commands": [
         {
           "contactId": "contact-v2-1",
+          "enabled": true,
           "isCollapsed": false,
+          "kind": "command",
           "name": "",
           "payload": {
             "type": "string",
@@ -194,10 +216,13 @@ exports[`preset migrations — fixtures > v2 fixture: sanitize produces stable s
       "style": {
         "bgColor": "#264653",
         "bgOpacity": 100,
+        "borderColor": "#2f2f2f",
         "fontSize": 13,
         "iconDarken": 35,
         "labelVisibility": "always",
         "radius": 8,
+        "textAlignX": "center",
+        "textAlignY": "middle",
         "textColor": "#ffffff",
         "wrapLabel": true,
       },
@@ -246,12 +271,17 @@ exports[`preset migrations — fixtures > v2 fixture: sanitize produces stable s
       "row": 0,
       "showInGrid": true,
     },
+    "webServer": {
+      "enabled": false,
+      "host": "127.0.0.1",
+      "port": 3210,
+    },
     "window": {
       "x": 100,
       "y": 120,
     },
   },
-  "version": 5,
+  "version": 6,
 }
 `;
 
@@ -262,7 +292,9 @@ exports[`preset migrations — fixtures > v3 fixture: sanitize produces stable s
       "commands": [
         {
           "contactId": "contact-v3-tcp",
+          "enabled": true,
           "isCollapsed": false,
+          "kind": "command",
           "name": "",
           "payload": {
             "type": "hex",
@@ -280,11 +312,14 @@ exports[`preset migrations — fixtures > v3 fixture: sanitize produces stable s
       "style": {
         "bgColor": "#1a1a1a",
         "bgOpacity": 100,
+        "borderColor": "#2f2f2f",
         "fontSize": 13,
         "iconDarken": 45,
         "iconPath": "/var/folders/fake/cam1.png",
         "labelVisibility": "hover",
         "radius": 8,
+        "textAlignX": "center",
+        "textAlignY": "middle",
         "textColor": "#ffffff",
       },
     },
@@ -332,11 +367,16 @@ exports[`preset migrations — fixtures > v3 fixture: sanitize produces stable s
       "row": 0,
       "showInGrid": true,
     },
+    "webServer": {
+      "enabled": false,
+      "host": "127.0.0.1",
+      "port": 3210,
+    },
     "window": {
       "x": 80,
       "y": 80,
     },
   },
-  "version": 5,
+  "version": 6,
 }
 `;

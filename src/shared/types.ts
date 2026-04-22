@@ -31,6 +31,11 @@ export interface UiConfig {
     color: string;
     opacity: number;
   };
+  webServer?: {
+    enabled?: boolean;
+    host?: string;
+    port?: number;
+  };
 }
 
 export interface AppSettings {

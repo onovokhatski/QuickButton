@@ -12,6 +12,7 @@ export function defaultPreset() {
       grid: { cols: 4, rows: 3 },
       gridBackground: { color: "#000000", opacity: 0.25 },
       service: { col: 0, row: 0, radius: 8, showInGrid: true },
+      webServer: { enabled: false, host: "127.0.0.1", port: 3210 },
       clickThroughBackground: true,
       window: { x: 80, y: 80 }
     },

@@ -1,4 +1,4 @@
-export type RightTab = "grid" | "connections" | "button";
+export type RightTab = "grid" | "connections" | "button" | "web";
 export type SelectionTarget = "button" | "service" | null;
 
 export interface UiState {

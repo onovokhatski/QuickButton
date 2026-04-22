@@ -18,6 +18,33 @@ export interface QuickButtonApi {
       steps: Array<{ ok: boolean; message?: string; code?: string }>;
     }>;
   };
+  webServer: {
+    getStatus(): Promise<{
+      enabled: boolean;
+      running: boolean;
+      host: string;
+      port: number;
+      url: string;
+      error?: string;
+    }>;
+    open(payload: { url: string }): Promise<{ ok: boolean }>;
+    restart(payload: { preset: unknown }): Promise<{
+      enabled: boolean;
+      running: boolean;
+      host: string;
+      port: number;
+      url: string;
+      error?: string;
+    }>;
+    syncState(payload: { preset: unknown }): Promise<{
+      enabled: boolean;
+      running: boolean;
+      host: string;
+      port: number;
+      url: string;
+      error?: string;
+    }>;
+  };
   window: {
     minimize(): Promise<void>;
     close(): Promise<void>;

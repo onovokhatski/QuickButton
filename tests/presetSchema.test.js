@@ -59,6 +59,7 @@ describe("sanitizePreset", () => {
     expect(result.meta.createdAt).toMatch(/\d{4}-\d{2}-\d{2}T/);
     expect(result.meta.updatedAt).toMatch(/\d{4}-\d{2}-\d{2}T/);
     expect(result.ui.grid).toEqual({ cols: 4, rows: 3 });
+    expect(result.ui.webServer).toEqual({ enabled: false, host: "127.0.0.1", port: 3210 });
     expect(result.buttons).toEqual([]);
     expect(result.contacts).toEqual([]);
   });
@@ -81,6 +82,15 @@ describe("sanitizePreset", () => {
     const result = sanitizePreset({ ui: { gridBackground: { color: "not-a-color", opacity: 2 } } });
     expect(result.ui.gridBackground.color).toBe("#000000");
     expect(result.ui.gridBackground.opacity).toBe(1);
+  });
+
+  it("normalizes web server config", () => {
+    const result = sanitizePreset({
+      ui: { webServer: { enabled: "yes", host: "0.0.0.0", port: 99999 } }
+    });
+    expect(result.ui.webServer.enabled).toBe(true);
+    expect(result.ui.webServer.host).toBe("127.0.0.1");
+    expect(result.ui.webServer.port).toBe(65535);
   });
 
   it("keeps valid buttons and drops extras above limit", () => {

@@ -17,9 +17,11 @@ type RenderDeps = {
     panelButtonSettingsEl: HTMLElement;
     panelGridSettingsEl: HTMLElement;
     panelConnectionsSettingsEl: HTMLElement;
+    panelWebSettingsEl: HTMLElement;
     tabButtonSettingsEl: HTMLElement;
     tabGridSettingsEl: HTMLElement;
     tabConnectionsSettingsEl: HTMLElement;
+    tabWebSettingsEl: HTMLElement;
     gridColsEl: HTMLInputElement;
     gridRowsEl: HTMLInputElement;
     btnSizeWEl: HTMLInputElement;
@@ -52,6 +54,12 @@ type RenderDeps = {
     editorFieldsEl: HTMLElement;
     serviceEditorEl: HTMLElement;
     serviceRadiusEl: HTMLInputElement;
+    webServerEnabledEl: HTMLInputElement;
+    webServerPortEl: HTMLInputElement;
+    webServerStatusEl: HTMLElement;
+    webServerUrlEl: HTMLElement;
+    webServerRestartEl: HTMLButtonElement;
+    webServerOpenEl: HTMLButtonElement;
   };
 };
 
@@ -120,6 +128,9 @@ export function createRenderController({
     els.alwaysOnTopEl.checked = Boolean(state.preset.ui.alwaysOnTop);
     els.clickThroughBackgroundEl.checked = clickThroughBackgroundEnabled();
     els.showServiceInGridEl.checked = Boolean(serviceConfig().showInGrid);
+    const webServer = state.preset.ui.webServer ?? {};
+    els.webServerEnabledEl.checked = Boolean(webServer.enabled);
+    els.webServerPortEl.value = String(Number(webServer.port) || 3210);
     if (window.quickButtonApi.menu?.setShowServiceInGrid) {
       window.quickButtonApi.menu.setShowServiceInGrid({ value: els.showServiceInGridEl.checked });
     }
@@ -308,6 +319,7 @@ export function createRenderController({
       "hidden",
       state.ui.activeRightTab !== "connections"
     );
+    els.panelWebSettingsEl.classList.toggle("hidden", state.ui.activeRightTab !== "web");
     const tabStates = [
       { active: state.ui.activeRightTab === "button", tabEl: els.tabButtonSettingsEl, panelEl: els.panelButtonSettingsEl },
       { active: state.ui.activeRightTab === "grid", tabEl: els.tabGridSettingsEl, panelEl: els.panelGridSettingsEl },
@@ -315,6 +327,11 @@ export function createRenderController({
         active: state.ui.activeRightTab === "connections",
         tabEl: els.tabConnectionsSettingsEl,
         panelEl: els.panelConnectionsSettingsEl
+      },
+      {
+        active: state.ui.activeRightTab === "web",
+        tabEl: els.tabWebSettingsEl,
+        panelEl: els.panelWebSettingsEl
       }
     ];
     tabStates.forEach(({ active, tabEl, panelEl }) => {
@@ -341,6 +358,7 @@ export function createRenderController({
       "add-button",
       "delete-button",
       "add-command",
+      "add-delay",
       "btn-label",
       "btn-bg",
       "btn-bg-transparent",
@@ -362,7 +380,9 @@ export function createRenderController({
       "contact-host",
       "contact-port",
       "contact-new",
-      "contact-save"
+      "contact-save",
+      "web-server-enabled",
+      "web-server-port"
     ];
     for (const id of editOnlyIds) {
       const el = document.getElementById(id) as HTMLInputElement | HTMLButtonElement | null;

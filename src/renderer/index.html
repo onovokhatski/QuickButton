@@ -54,6 +54,16 @@
             >
               Button
             </button>
+            <button
+              id="tab-web-settings"
+              class="editor-tab"
+              role="tab"
+              aria-selected="false"
+              aria-controls="panel-web-settings"
+              tabindex="-1"
+            >
+              Web
+            </button>
           </div>
 
           <div
@@ -433,6 +443,35 @@
               <button id="contact-save">Save</button>
             </div>
             <div id="contacts-list" class="form-grid"></div>
+          </div>
+
+          <div
+            id="panel-web-settings"
+            class="form-grid hidden"
+            role="tabpanel"
+            aria-labelledby="tab-web-settings"
+          >
+            <h3>Web server</h3>
+            <div class="row">
+              <label class="muted">Enable web UI</label>
+              <input id="web-server-enabled" type="checkbox" />
+            </div>
+            <div class="row">
+              <label class="muted">Port</label>
+              <input id="web-server-port" type="number" min="1" max="65535" value="3210" />
+            </div>
+            <div class="row">
+              <label class="muted">Status</label>
+              <span id="web-server-status" class="muted">stopped</span>
+            </div>
+            <div class="row">
+              <label class="muted">URL</label>
+              <code id="web-server-url" class="muted">-</code>
+            </div>
+            <div class="row">
+              <button id="web-server-restart">Restart</button>
+              <button id="web-server-open">Open in browser</button>
+            </div>
           </div>
         </div>
       </div>

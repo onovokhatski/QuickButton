@@ -1,4 +1,4 @@
-const PRESET_SCHEMA_VERSION = 5;
+const PRESET_SCHEMA_VERSION = 6;
 const MAX_BUTTONS = 100;
 const MAX_COMMANDS = 10;
 const MAX_CONTACTS = 200;
@@ -25,6 +25,7 @@ function createDefaultPreset() {
       grid: { cols: 4, rows: 3 },
       gridBackground: { color: "#000000", opacity: 0.25 },
       service: { col: 0, row: 0, radius: 8, showInGrid: true },
+      webServer: { enabled: false, host: "127.0.0.1", port: 3210 },
       clickThroughBackground: true,
       window: { x: 80, y: 80 }
     },
@@ -82,6 +83,12 @@ const PRESET_MIGRATIONS = {
     ...raw,
     version: 5,
     contacts: Array.isArray(raw.contacts) ? raw.contacts.map((contact) => ({ ...contact })) : []
+  }),
+  // v5 -> v6: add web server config block.
+  5: (raw) => ({
+    ...raw,
+    version: 6,
+    ui: { ...(raw.ui ?? {}) }
   })
 };
 
@@ -238,6 +245,8 @@ function sanitizePreset(inputPreset) {
   const gridBgOpacity = Number.isFinite(gridBgOpacityRaw)
     ? Math.max(0, Math.min(1, gridBgOpacityRaw))
     : fallback.ui.gridBackground.opacity;
+  const webServerEnabled = Boolean(preset?.ui?.webServer?.enabled ?? false);
+  const webServerPort = clampInt(preset?.ui?.webServer?.port, 1, 65535, 3210);
 
   const sanitizedButtons = (Array.isArray(preset.buttons) ? preset.buttons : [])
     .slice(0, MAX_BUTTONS)
@@ -307,6 +316,11 @@ function sanitizePreset(inputPreset) {
         row: serviceRow,
         radius: clampInt(preset?.ui?.service?.radius, 0, 24, 8),
         showInGrid: Boolean(preset?.ui?.service?.showInGrid ?? true)
+      },
+      webServer: {
+        enabled: webServerEnabled,
+        host: "127.0.0.1",
+        port: webServerPort
       },
       clickThroughBackground: Boolean(preset?.ui?.clickThroughBackground ?? true),
       window: {
